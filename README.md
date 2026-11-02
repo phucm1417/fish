@@ -1,22 +1,34 @@
 # Câu Cá Nâng Cấp
 
-Game câu cá idle viết bằng HTML5 Canvas. Toàn bộ game nằm trong một file `index.html`, không cần build hay thư viện ngoài.
+Game câu cá idle viết bằng HTML5 Canvas. Game nằm trong `index.html`, không cần cài thư viện hoặc build.
 
-## Chạy game
+## Chạy trên máy tính
 
-Mở `index.html` trong trình duyệt, hoặc phục vụ thư mục bằng web server tĩnh:
+**Cách nhanh:** mở `index.html` bằng trình duyệt.
 
-```bash
-python3 -m http.server 8000
-# rồi mở http://localhost:8000
+**Nếu trình duyệt chặn lưu tiến độ hoặc muốn chạy qua HTTP:** mở Terminal/PowerShell tại thư mục dự án và chạy:
+
+```powershell
+python -m http.server 8000
 ```
 
-Giao diện thiết kế cho điện thoại màn hình dọc, vẫn chạy trên máy tính. Tiến độ được lưu trong `localStorage`.
+Mở <http://localhost:8000>. Giữ cửa sổ terminal mở khi chơi; nhấn `Ctrl+C` để dừng máy chủ.
+
+Nếu lệnh `python` không có trên máy, thử `py -m http.server 8000`.
+
+## Đưa lên GitHub và bật GitHub Pages
+
+1. Tạo repository GitHub (ví dụ `fish`) rồi đẩy nhánh `main` lên repository.
+2. Trong repository, vào **Settings → Pages** và đặt **Source** thành **GitHub Actions**.
+3. Mỗi lần đẩy commit lên `main`, workflow `.github/workflows/pages.yml` sẽ tự xuất bản game. Có thể chạy thủ công tại **Actions → Deploy game to GitHub Pages → Run workflow**.
+4. Mở địa chỉ GitHub Pages được hiển thị trong **Settings → Pages**. Với repository `phucm1417/fish`, địa chỉ thường là <https://phucm1417.github.io/fish/>.
+
+Workflow đưa `index.html` ở thư mục gốc lên Pages; không cần build. `README.md` chỉ là tài liệu, còn game bắt đầu từ `index.html`.
 
 ## Cách chơi
 
 - Chạm màn hình để thả câu. Khi có tiếng cắn, chạm lần nữa khi vòng thu nhỏ khớp với vòng chấm (cắn hoàn hảo nhận gấp đôi).
-- Thuyền cấp 1 trở lên tự câu, nút thuyền bật/tắt tự động. Thuyền cấp 3 trở lên tự bán cá.
+- Thuyền cấp 1 trở lên tự câu; nút thuyền bật/tắt tự động. Thuyền cấp 3 trở lên tự bán cá.
 - Thú cưng (9 loài) có chỗ đậu riêng và tự bắt cá theo chu kỳ, kể cả khi bạn vắng.
 - Hồ cá (nút góc trên trái): thả cá vào để sinh xu theo thời gian. Có thể đưa cá về túi để thay con khác.
 - Triệu hồi trùm từ tab trùm, hoặc chờ trùm xuất hiện sau mỗi 30 lần câu trong khu vực.
@@ -29,20 +41,11 @@ Giao diện thiết kế cho điện thoại màn hình dọc, vẫn chạy trê
 ## Cấu trúc
 
 ```
-index.html      Toàn bộ game (HTML, CSS, JS)
-docs/           Quy tắc viết code và quy tắc thiết kế asset
-skills/         Bộ skill cho dự án game (core loop, rendering, economy, ...)
+index.html                  Game HTML/CSS/JavaScript một tệp
+.github/workflows/pages.yml Tự động triển khai GitHub Pages
+.nojekyll                   Tắt xử lý Jekyll cho xuất bản từ nhánh
+docs/                        Quy tắc code và thiết kế asset
+skills/                      Hướng dẫn phát triển game
 ```
 
-## Ghi chú kỹ thuật
-
-- Cá, thú cưng, trùm, thuyền, người câu và đồ vật đều được vẽ bằng code (Canvas path), không dùng file ảnh.
-- Nền tĩnh được cache theo khu vực. Các lớp nền và hiệu ứng vẽ ở độ phân giải theo màn hình (DPR).
-- Cá bơi bằng bộ điều khiển hướng mượt, cùng cách với cá trong hồ phóng to.
-- Dữ liệu lưu từ các phiên bản cũ (v3 đến v6) được đọc lại và chuyển sang định dạng mới.
-
-## Trạng thái
-
-Bản đang phát triển. Chưa có kiểm thử tự động. Cần chơi thử trên trình duyệt và điện thoại để kiểm tra hiệu năng, bố cục và cân bằng.
-
-Phần nhiều người chơi chưa được làm: chế độ nhiều người chơi trực tuyến, nhiệm vụ, thành tựu.
+Tiến độ chơi được lưu trong `localStorage` của trình duyệt. Mỗi trình duyệt và mỗi địa chỉ web có vùng lưu riêng.
