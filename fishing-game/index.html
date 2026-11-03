@@ -12,6 +12,7 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
 #game{position:absolute;left:0;top:0;display:block;cursor:pointer}
 .hud{position:absolute;top:6px;left:6px;right:6px;display:flex;gap:4px;align-items:center;justify-content:space-between;pointer-events:none}
 .chip{display:flex;align-items:center;gap:3px;background:rgba(27,26,46,.8);border:2px solid rgba(254,228,64,.35);border-radius:10px;padding:3px 7px;font-size:14px}
+.chip[hidden]{display:none}
 .ico{width:26px;height:26px;object-fit:contain;flex:none}
 .chip .ico{width:20px;height:20px}
 #aqBtn{pointer-events:auto;cursor:pointer;font:inherit;color:inherit;background:rgba(27,26,46,.8);border:2px solid rgba(254,228,64,.35);border-radius:10px;padding:3px 7px;display:flex;align-items:center;gap:3px;font-size:14px}
@@ -30,7 +31,7 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
 .btn:disabled{opacity:.45;cursor:default}
 .btn.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 3px 0 #120f22}
 .btn .ico{width:22px;height:22px}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:6px 8px 0}
+.tabs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 8px 0}
 .panel{flex:1 1 auto;min-height:0;overflow-y:auto;padding:8px 8px 18px;display:grid;gap:6px;grid-template-columns:repeat(5,1fr);align-content:start}
 #sheet:not(.open) .panel{display:none}
 .tile{background:linear-gradient(180deg,#2c2850,var(--tile));border:2px solid var(--line);border-radius:12px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:inherit;font:inherit;cursor:pointer;min-width:0;box-shadow:0 3px 0 #120f22}
@@ -47,6 +48,22 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
 .wide{grid-column:1/-1}
 .row{display:flex;align-items:center;gap:8px;grid-column:1/-1;font-size:13px}
 .row .btn{padding:6px 10px}
+.hud .chip,.hud #aqBtn{min-width:0}
+@media(max-width:420px){.chip{padding:2px 5px;font-size:11px;gap:2px}.chip .ico{width:17px;height:17px}#aqBtn{padding:2px 5px;font-size:11px}#aqBtn .ico{width:17px;height:17px}#debTxt{font-size:10px}.hud{gap:2px}}
+@media(max-width:360px){#evChip{display:none}}
+.prog{width:100%;height:5px;background:rgba(27,26,46,.8);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--moss,#8ab17d),var(--gold));transition:width .25s ease}
+.prog.boss i{background:linear-gradient(90deg,#f29e4c,#e76f51)}
+.pct{font-size:9px;color:#cfc9ff;line-height:1;min-height:9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+#zoneHud{position:absolute;top:42px;left:8px;right:8px;display:flex;align-items:center;gap:6px;pointer-events:none;font-size:10px;color:#e6e1ff;text-shadow:0 1px 2px #000;z-index:2}
+#zoneHud .prog{flex:1 1 auto;height:6px}
+#zoneHud b{font-weight:700;color:var(--gold)}
+#ultBtn{position:absolute;right:8px;bottom:calc(var(--sheet) + 10px);width:58px;height:58px;border-radius:50%;border:2px solid var(--line);background:radial-gradient(circle at 50% 35%,#332e5e,#17142a);color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;z-index:4;box-shadow:0 4px 0 #100d20;pointer-events:auto;transition:bottom .28s ease,opacity .2s ease}
+#ultBtn:disabled{cursor:default}
+#ultBtn .ico{width:28px;height:28px}
+#ultTxt{font-size:9px;color:var(--gold);line-height:1}
+#ultRing{position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(var(--gold) calc(var(--p,1)*1%),rgba(61,55,102,.25) 0);-webkit-mask:radial-gradient(circle,transparent 60%,#000 62%);mask:radial-gradient(circle,transparent 60%,#000 62%)}
+body.sheetOpen #ultBtn{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -56,11 +73,14 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
     <div style="display:flex;gap:4px;align-items:center"><div class="chip"><img class="ico" id="coinIco" alt=""><span id="coins">0</span></div><button id="aqBtn" data-aqopen="1"><img class="ico" id="aqHudIco" alt=""><span id="aqPool">0</span></button></div>
     <div style="display:flex;gap:4px">
       <div class="chip"><img class="ico" id="wx" alt=""></div>
-      <div class="chip"><img class="ico" id="ev" alt=""></div>
-      <div class="chip" id="comboChip" style="visibility:hidden"><img class="ico" id="starIco" alt=""><span id="combo">×1.0</span></div>
+      <div class="chip" id="evChip"><img class="ico" id="ev" alt=""></div>
+      <div class="chip" id="debChip" hidden style="border-color:rgba(231,111,81,.7)"><img class="ico" id="debIco" alt=""><span id="debTxt"></span></div>
+      <div class="chip" id="comboChip" style="display:none"><img class="ico" id="starIco" alt=""><span id="combo">×1.0</span></div>
     </div>
     <div class="chip"><img class="ico" id="bagIco" alt=""><span id="bagN">0/10</span></div>
   </div>
+  <div id="zoneHud"><span id="zoneName"></span><div class="prog boss"><i id="zoneFill"></i></div><span id="zonePct"></span></div>
+  <button id="ultBtn" data-ult="1" aria-label="Dùng chiêu thức"><i id="ultRing"></i><img class="ico" id="ultIco" alt=""><span id="ultTxt">Chiêu</span></button>
 </div>
 <div id="aqModal" hidden><div id="aqCard"><button class="btn" id="aqClose" data-aqclose="1">✕</button><canvas id="tank" width="640" height="440"></canvas><div id="aqInfo"></div></div></div>
 <div id="sheet">
@@ -71,11 +91,13 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
     <button class="btn" id="sell" data-sell="1"></button>
   </div>
   <div class="tabs">
-    <button class="btn" id="tab_up" data-tab="up"><img class="ico" id="tabUpIco" alt=""></button>
-    <button class="btn" id="tab_zone" data-tab="zone"><img class="ico" id="tabZoneIco" alt=""></button>
-    <button class="btn" id="tab_pet" data-tab="pet"><img class="ico" id="tabPetIco" alt=""></button>
-    <button class="btn" id="tab_boss" data-tab="boss"><img class="ico" id="tabBossIco" alt=""></button>
-    <button class="btn" id="tab_coll" data-tab="coll"><img class="ico" id="tabCollIco" alt=""></button>
+    <button class="btn" id="tab_up" data-tab="up" title="Nâng cấp"><img class="ico" id="tabUpIco" alt=""></button>
+    <button class="btn" id="tab_boat" data-tab="boat" title="Thuyền"><img class="ico" id="tabBoatIco" alt=""></button>
+    <button class="btn" id="tab_zone" data-tab="zone" title="Khu vực"><img class="ico" id="tabZoneIco" alt=""></button>
+    <button class="btn" id="tab_skin" data-tab="skin" title="Skin nhân vật"><img class="ico" id="tabSkinIco" alt=""></button>
+    <button class="btn" id="tab_pet" data-tab="pet" title="Thú cưng"><img class="ico" id="tabPetIco" alt=""></button>
+    <button class="btn" id="tab_boss" data-tab="boss" title="Trùm"><img class="ico" id="tabBossIco" alt=""></button>
+    <button class="btn" id="tab_coll" data-tab="coll" title="Bộ sưu tập"><img class="ico" id="tabCollIco" alt=""></button>
   </div>
   <div class="panel" id="panel"></div>
 </div>
@@ -85,56 +107,117 @@ html,body{margin:0;height:100%;background:#0b0a16;color:#f4f1e6;font:600 13px sy
 /* ================= 1. CONFIG ================= */
 /** @typedef {'rod'|'bait'|'boat'|'bag'|'pet'} UpKey */
 
-const SAVE_KEY='cau_ca_v7', LEGACY_KEYS=['cau_ca_v6','cau_ca_v5','cau_ca_v4','cau_ca_v3'];
+const SAVE_KEY='cau_ca_v8', LEGACY_KEYS=['cau_ca_v7','cau_ca_v6','cau_ca_v5','cau_ca_v4','cau_ca_v3'];
 const UP_KEYS=/** @type {UpKey[]} */(['rod','bait','boat','bag','pet','hook','line']);
-const UP={rod:{b:25,m:1.7,max:10,min:1},bait:{b:60,m:1.8,max:10,min:0},boat:{b:30,m:2.1,max:10,min:0},bag:{b:40,m:1.6,max:15,min:0},pet:{b:300,m:1.9,max:10,min:0},hook:{b:150,m:1.8,max:10,min:0},line:{b:200,m:1.9,max:10,min:0}};
+/* Giá nâng cấp tăng đều: hệ số nhỏ hơn trước để cuối game không bị hụt hơi */
+const UP={rod:{b:40,m:1.55,max:10,min:1},bait:{b:80,m:1.5,max:10,min:0},boat:{b:220,m:1.75,max:10,min:0},bag:{b:80,m:1.45,max:15,min:0},pet:{b:450,m:1.7,max:10,min:0},hook:{b:160,m:1.6,max:10,min:0},line:{b:200,m:1.6,max:10,min:0}};
 const P={ink:'#1b1a2e',white:'#ffffff',sun:'#f4d35e',orange:'#f29e4c',red:'#e76f51',moss:'#8ab17d',teal:'#2a9d8f',deep:'#264653',blue:'#457b9d',ice:'#a8dadc',sand:'#e9c46a',brown:'#bc6c25',violet:'#9b5de5',pink:'#f15bb5',gold:'#fee440',plum:'#6a4c93',grey:'#8d99ae',cyan:'#6ee7f7'};
 const INK=P.ink;
 const RAR_KEYS=['white','moss','blue','violet','orange','gold'];
+/* Bảng cá: giá trị tăng dần theo từng khu vực, không còn cảnh khu sau rẻ hơn khu trước */
 const FISH=[
-{b:'orange',l:'sun',d:'brown',f:'red',p:'plain',v:5,r:0,s:1},
-{b:'sand',l:'gold',d:'brown',f:'orange',p:'spot',v:9,r:0,s:1.1},
-{b:'brown',l:'sand',d:'ink',f:'brown',p:'plain',v:14,r:0,s:1},
-{b:'moss',l:'sun',d:'teal',f:'teal',p:'stripe',v:28,r:1,s:1.2},
-{b:'ice',l:'white',d:'blue',f:'blue',p:'belly',v:34,r:1,s:1.2},
-{b:'red',l:'orange',d:'deep',f:'red',p:'spot',v:90,r:2,s:1.3},
-{b:'blue',l:'ice',d:'deep',f:'blue',p:'stripe',v:170,r:2,s:1.4},
-{b:'teal',l:'ice',d:'deep',f:'sun',p:'plain',v:420,r:3,s:1.5},
-{b:'gold',l:'white',d:'orange',f:'gold',p:'stripe',v:2200,r:4,s:1.6,crown:1},
-{b:'violet',l:'pink',d:'plum',f:'pink',p:'spot',v:12000,r:5,s:1.7,crown:1},
-{k:'jelly',v:40,r:1},{k:'squid',v:160,r:2},{k:'octo',v:260,r:3},{k:'crab',v:55,r:1},
-{k:'seahorse',v:320,r:3},{k:'puffer',v:210,r:2},{k:'lobster',v:480,r:3},{k:'starfish',v:45,r:1},
-{k:'nautilus',v:3200,r:4},{k:'mola',v:700,r:3},{k:'boot',v:3,r:0},{k:'bottle',v:450,r:3},
-{k:'tire',v:2,r:0},{k:'chest',v:9000,r:5},{k:'pearl',v:2600,r:4},{k:'meteor',v:22000,r:5}].map(x=>({b:'',l:'',d:'',f:'',p:'plain',s:1,...x}));
+{n:'Cá Mè Hoa Khổng Lồ',b:'orange',l:'sun',d:'brown',f:'red',p:'plain',v:6,r:0,s:1},
+{n:'Cá Trắm Đen Vảy Sắt',b:'sand',l:'gold',d:'brown',f:'orange',p:'spot',v:11,r:0,s:1.1},
+{n:'Cá Lóc Bông Đột Biến',b:'brown',l:'sand',d:'ink',f:'brown',p:'plain',v:18,r:0,s:1},
+{n:'Cá Chép Vàng May Mắn',b:'moss',l:'sun',d:'teal',f:'teal',p:'stripe',v:34,r:1,s:1.2},
+{n:'Cá Diếc Thạch Anh',b:'ice',l:'white',d:'blue',f:'blue',p:'belly',v:48,r:1,s:1.2},
+{n:'Cá Bống Tượng Sấm Sét',b:'red',l:'orange',d:'deep',f:'red',p:'spot',v:110,r:2,s:1.3},
+{n:'Cá Hồi Cầu Vồng Vàng',b:'blue',l:'ice',d:'deep',f:'blue',p:'stripe',v:230,r:2,s:1.4},
+{n:'Cá Hải Tượng Bão Tố',b:'teal',l:'ice',d:'deep',f:'sun',p:'plain',v:650,r:3,s:1.5},
+{n:'Cá Rồng Huyết Kim',b:'gold',l:'white',d:'orange',f:'gold',p:'stripe',v:1200,r:4,s:1.6,crown:1},
+{n:'Cá Thần Đáy Hồ',b:'violet',l:'pink',d:'plum',f:'pink',p:'spot',v:3000,r:5,s:1.7,crown:1,aura:'gold'},
+{k:'jelly',n:'Sứa Pha Lê',v:45,r:1},{k:'squid',n:'Mực Đèn Lồng',v:190,r:2},
+{k:'octo',n:'Bạch Tuộc Nhỏ Kraken',v:320,r:3},{k:'crab',n:'Cua Đá San Hô',v:70,r:1},
+{k:'seahorse',n:'Cá Ngựa Hoàng Kim',v:380,r:3},{k:'puffer',n:'Cá Nóc Gia Tốc',v:240,r:2},
+{k:'lobster',n:'Tôm Hùm Đỏ',v:560,r:3},{k:'starfish',n:'Sao Biển Năm Cánh',v:50,r:1},
+{k:'nautilus',n:'Ốc Anh Vũ Cổ',v:1600,r:4},{k:'mola',n:'Cá Mặt Trăng',v:800,r:3},
+{k:'boot',n:'Chiếc Ủng Cũ',v:4,r:0},{k:'bottle',n:'Chai Thư Cổ',v:520,r:3},
+{k:'tire',n:'Lốp Xe Chìm',v:3,r:0},{k:'chest',n:'Rương Báu Cướp Biển',v:4200,r:5},
+{k:'pearl',n:'Ngọc Trai Đen',v:2600,r:4},{k:'meteor',n:'Thiên Thạch Biển Sâu',v:12000,r:5},
+{n:'Cá Chiết Giang Ngũ Sắc',b:'teal',l:'gold',d:'violet',f:'pink',p:'stripe',v:900,r:2,s:1.25},
+{n:'Cá Anh Vũ Hoàng Gia',b:'gold',l:'sun',d:'orange',f:'violet',p:'belly',v:2000,r:4,s:1.6,crown:1},
+{n:'Cá Tai Kính San Hô',b:'ice',l:'white',d:'cyan',f:'ice',p:'plain',v:3600,r:3,s:1.3,aura:'cyan'},
+{n:'Rùa Cổ Đại Khổng Lồ',b:'moss',l:'sand',d:'brown',f:'moss',p:'spot',v:6000,r:4,s:1.8,aura:'moss'},
+{n:'Cá Tra Bào Ngư',b:'pink',l:'sand',d:'orange',f:'pink',p:'belly',v:4200,r:3,s:1.4},
+{n:'Cá Sấu Bò Nước Ngọt',b:'moss',l:'brown',d:'ink',f:'moss',p:'stripe',v:6000,r:4,s:1.7},
+{n:'Cá Chuối Đỏ Toxic',b:'red',l:'orange',d:'moss',f:'moss',p:'spot',v:8000,r:4,s:1.35,aura:'moss'},
+{n:'Cá Rồng Hoang Kim',b:'gold',l:'white',d:'red',f:'red',p:'stripe',v:20000,r:5,s:1.9,crown:1,horn:1,aura:'gold'},
+{n:'Cá Thần Ánh Trăng',b:'ice',l:'white',d:'blue',f:'cyan',p:'belly',v:32000,r:5,s:2,crown:1,aura:'cyan'}].map(x=>({b:'',l:'',d:'',f:'',p:'plain',s:1,...x}));
 const ZONES=[
-{ic:'lily',sky:['ice','white'],wat:['teal','deep'],hill:0,cost:0,rod:1,fish:[0,1,2,3]},
-{ic:'river',sky:['ice','white'],wat:['blue','deep'],hill:8,cost:800,rod:2,fish:[1,2,3,4,5]},
-{ic:'mount',sky:['blue','ice'],wat:['deep','ink'],hill:40,cost:8000,rod:4,fish:[3,4,5,6]},
-{ic:'sea',sky:['orange','sun'],wat:['blue','ink'],hill:6,cost:80000,rod:6,fish:[5,6,7,8]},
-{ic:'abyss',sky:['ink','plum'],wat:['deep','ink'],hill:14,cost:800000,rod:8,fish:[7,8,9]},
-{ic:'coral',sky:['teal','ice'],wat:['blue','deep'],hill:0,cost:3000000,rod:8,hook:2,fish:[10,13,17,15,14,19]},
-{ic:'swamp',sky:['moss','sand'],wat:['brown','deep'],hill:10,cost:15000000,rod:9,line:2,fish:[11,12,20,22,21]},
-{ic:'ruin',sky:['plum','ink'],wat:['deep','ink'],hill:20,cost:100000000,rod:10,hook:5,line:5,fish:[23,21,25,24,20]}];
+{n:'Đồng Cỏ Ngập',ic:'lily',sky:['ice','white'],wat:['teal','deep'],hill:0,cost:0,rod:1,fish:[0,1,2,3]},
+{n:'Sông Suối',ic:'river',sky:['ice','white'],wat:['blue','deep'],hill:8,cost:600,rod:2,fish:[1,2,3,4,5]},
+{n:'Hồ Núi',ic:'mount',sky:['blue','ice'],wat:['deep','ink'],hill:40,cost:2400,rod:4,fish:[3,4,5,6]},
+{n:'Biển Khơi',ic:'sea',sky:['orange','sun'],wat:['blue','ink'],hill:6,cost:9000,rod:6,fish:[5,6,7,8]},
+{n:'Vực Thẳm',ic:'abyss',sky:['ink','plum'],wat:['deep','ink'],hill:14,cost:34000,rod:8,fish:[6,7,8,9,26,27]},
+{n:'Rạn San Hô',ic:'coral',sky:['teal','ice'],wat:['blue','deep'],hill:0,cost:120000,rod:8,hook:2,fish:[14,16,18,19,28,29]},
+{n:'Đầm Lầy',ic:'swamp',sky:['moss','sand'],wat:['brown','deep'],hill:10,cost:380000,rod:9,line:2,fish:[21,12,30,31,32]},
+{n:'Di Tích Chìm',ic:'ruin',sky:['plum','ink'],wat:['deep','ink'],hill:20,cost:1100000,rod:10,hook:5,line:5,fish:[23,24,25,33,34]}];
 const BOSS_EVERY=30,FIGHT_MS=10000;
 const BOSSES=[
-{k:'eel',z:[2],hp:6,v:2500},
-{k:'turtle',z:[2,3],hp:8,v:6000},
-{k:'shark',z:[3,5],hp:10,v:15000},
-{k:'dragon',z:[4,7],hp:14,v:60000},
-{k:'kraken',z:[4,6],hp:18,v:150000}];
+{k:'eel',n:'Lươn Điện Cổ',z:[2],hp:6,v:1200},
+{k:'turtle',n:'Rùa Thần Mai Đá',z:[2,3],hp:8,v:3000},
+{k:'shark',n:'Cá Mập Vây Bạc',z:[3,5],hp:10,v:9000},
+{k:'dragon',n:'Rồng Biển Cổ',z:[4,7],hp:14,v:30000},
+{k:'kraken',n:'Kraken Vực Sâu',z:[4,6],hp:18,v:90000}];
 /* Thú cưng: c giá, iv chu kỳ, rare/coin thưởng, perf cắn hoàn hảo, fx màu hạt khi bắt */
 const PETS=[
-{name:'bird',c:300,iv:1,rare:1,coin:1,perf:0,fx:['orange','white']},
-{name:'ufo',c:900,iv:.6,rare:1,coin:1,perf:0,fx:['gold','cyan']},
-{name:'drone',c:1500,iv:1,rare:1.4,coin:1,perf:0,fx:['ice','white']},
-{name:'hero',c:4000,iv:1,rare:1,coin:1.3,perf:0,fx:['gold','white']},
-{name:'anime',c:6000,iv:1,rare:1,coin:1,perf:.3,fx:['pink','violet']},
-{name:'robot',c:10000,iv:1,rare:1,coin:1.5,perf:0,fx:['cyan','white']},
-{name:'dragonling',c:15000,iv:1,rare:2,coin:1,perf:0,fx:['red','orange']},
-{name:'turtle',c:25000,iv:.8,rare:1,coin:1,perf:.5,fx:['teal','moss']},
-{name:'fox',c:40000,iv:.8,rare:1.2,coin:1.2,perf:0,fx:['orange','sun']}];
+{name:'bird',c:250,iv:1,rare:1,coin:1,perf:0,fx:['orange','white']},
+{name:'ufo',c:700,iv:.6,rare:1,coin:1,perf:0,fx:['gold','cyan']},
+{name:'drone',c:1200,iv:1,rare:1.4,coin:1,perf:0,fx:['ice','white']},
+{name:'hero',c:2600,iv:1,rare:1,coin:1.3,perf:0,fx:['gold','white']},
+{name:'anime',c:4200,iv:1,rare:1,coin:1,perf:.3,fx:['pink','violet']},
+{name:'robot',c:6500,iv:1,rare:1,coin:1.5,perf:0,fx:['cyan','white']},
+{name:'dragonling',c:9000,iv:1,rare:2,coin:1,perf:0,fx:['red','orange']},
+{name:'turtle',c:14000,iv:.8,rare:1,coin:1,perf:.5,fx:['teal','moss']},
+{name:'fox',c:20000,iv:.8,rare:1.2,coin:1.2,perf:0,fx:['orange','sun']}];
 const EVENTS=[{ic:'star',rare:2,coin:1,speed:1},{ic:'coin',rare:1,coin:1.5,speed:1},{ic:'bolt',rare:1,coin:1,speed:1.5}];
-const WEATHER=[{ic:'sun',wait:1,rare:1,ring:1},{ic:'drop',wait:.7,rare:1,ring:1},{ic:'bolt',wait:1,rare:1.8,ring:1},{ic:'cloud',wait:1,rare:1,ring:1.3}];
+/* Thời tiết: wait (chờ cắn), rare (cá hiếm), ring (cửa sổ cắn), wind (gió làm vòng cắn dao động), fog (che bóng gợi ý và cá)
+   Mỗi thời tiết kéo theo một hiệu ứng bất lợi (deb) như trong tài liệu thiết kế */
+const WEATHER=[
+{ic:'sun',wait:1.35,rare:1,ring:1,wind:0,fog:0,deb:'heat'},
+{ic:'drop',wait:.9,rare:1,ring:.8,wind:0,fog:0,deb:'rust'},
+{ic:'bolt',wait:1,rare:1.8,ring:.9,wind:1,fog:0,deb:'shock'},
+{ic:'cloud',wait:1.1,rare:1,ring:.85,wind:0,fog:1,deb:'fog'}];
+const DEBUFFS={
+  heat:{n:'Kiệt Sức',s:'Nóng',ic:'heat',t:'Nắng gắt: cá lặn sâu, chờ cắn lâu hơn và lực kéo giảm'},
+  rust:{n:'Dây Rỉ Sét',s:'Rỉ',ic:'rust',t:'Mưa ẩm: dây câu dễ rối hơn gấp đôi'},
+  shock:{n:'Bão Điện',s:'Điện',ic:'shock',t:'Sét đánh làm tê tay 1,5 giây, không nhấn cần được'},
+  fog:{n:'Mù Sương',s:'Sương',ic:'fog',t:'Sương dày che gần hết mặt nước và bóng cá'}};
+/* Thuyền: mỗi cấp là một con thuyền có tên và hiệu ứng riêng; tự bán mở ở cấp 5 và rất chậm */
+const BOATS=[
+{n:'Bè Gỗ Sinh Tồn',fx:'Chưa tự câu'},
+{n:'Thuyền Trúc Bát Nhã',fx:'Tự câu chậm'},
+{n:'Thuyền Hải Tặc Thousand Sunny',fx:'+8% xu khi bắt cá'},
+{n:'Thuyền Rồng Hoàng Gia',fx:'Tự câu nhanh hơn'},
+{n:'Chiến Tàu Viking Longship',fx:'+1 độ bền, kháng sóng bão'},
+{n:'Tàu Ngầm Nautilus',fx:'Mở tự bán: mỗi 5 phút, 70% giá'},
+{n:'Thuyền Hoa Sen Tiên Cảnh',fx:'Giảm rối dây, +1 độ bền'},
+{n:'Thuyền Băng Nam Cực',fx:'+10% giá bán, +1 độ bền'},
+{n:'Phi Thuyền Wakanda Royal',fx:'+15% cá hiếm'},
+{n:'Tàu Tuần Dương Cyberpunk',fx:'Tự bán nhanh hơn, +1 độ bền'},
+{n:'Thuyền Đa Chiều TARDIS',fx:'Tự bán nhanh nhất, kho +15 ô'}];
+/* Nhân vật dạng skin: mua rồi đổi để lấy nội tại + chiêu cuối riêng */
+const SKINS=[
+{n:'Ngư Dân Tập Sự',src:'Cơ bản',cost:0,hair:'#7a4418',hs:'short',outfit:'#457b9d',accent:'#e9c46a',acc:'cap',weapon:'rod',aura:'',pass:{},pt:'Không có nội tại đặc biệt',ult:{n:'Mẻ Lưới May Mắn',type:'catch',cd:90,mult:1.5,desc:'Bắt ngay cá đang cắn với giá x1.5'}},
+{n:'Tôn Thần Nhẫn Giả',src:'Anime / Naruto',cost:300,hair:'#f4d35e',hs:'spike',outfit:'#f29e4c',accent:'#1b1a2e',acc:'band',weapon:'orb',aura:'#f4d35e',pass:{wait:.9,pull:1.08},pt:'Chờ cắn -10%, lực kéo +8%',ult:{n:'Bằng Phong Rasengan',type:'stun',cd:60,dur:8,desc:'Choáng cá 8s: chờ cắn và vòng cắn cực nhanh'}},
+{n:'Tài Ba Khai Sáng',src:'Anime / Dragon Ball',cost:600,hair:'#1b1a2e',hs:'spike',outfit:'#f29e4c',accent:'#2a9d8f',acc:'none',weapon:'gauntlet',aura:'#fee440',pass:{coin:1.08,pull:1.1},pt:'Xu +8%, lực kéo +10%',ult:{n:'Kamehameha Fishing',type:'boss',cd:95,dmg:.45,desc:'Trùm mất 45% máu, cá thường bị bắt ngay'}},
+{n:'Hải Vương Mũ Rơm',src:'Anime / One Piece',cost:1000,hair:'#264653',hs:'short',outfit:'#e76f51',accent:'#e9c46a',acc:'straw',weapon:'rod',aura:'',pass:{rare:1.15,coin:1.05},pt:'Cá hiếm +15%, xu +5%',ult:{n:'Gomu Gigant Pull',type:'catch',cd:75,mult:2.2,desc:'Bắt ngay cá đang cắn với giá x2.2'}},
+{n:'Thần Niệm Niệm Giả',src:'Anime / Hunter x Hunter',cost:1600,hair:'#8ab17d',hs:'spike',outfit:'#2a9d8f',accent:'#fee440',acc:'none',weapon:'rod',aura:'#9b5de5',pass:{ring:1.12},pt:'Vòng cắn hoàn hảo rộng +12%',ult:{n:'Niệm Lực Ngư Giật',type:'stun',cd:65,dur:7,desc:'Choáng cá 7s, vòng cắn mở rộng'}},
+{n:'Ma Pháp Thiếu Nữ Card',src:'Anime / Cardcaptor',cost:2500,hair:'#f15bb5',hs:'long',outfit:'#f15bb5',accent:'#ffffff',acc:'crown',weapon:'staff',aura:'#f15bb5',pass:{wait:.82},pt:'Chờ cắn -18%',ult:{n:'Thẻ Bài The Water',type:'lure',cd:70,mult:2.2,desc:'Dụ cá hiếm nhất khu vực, bắt với giá x2.2'}},
+{n:'Mèo Máy Tương Lai',src:'Anime / Doraemon',cost:4000,hair:'#6ee7f7',hs:'short',outfit:'#457b9d',accent:'#fee440',acc:'ears',weapon:'orb',aura:'#6ee7f7',pass:{sell:1.08,wait:.92},pt:'Giá bán +8%, chờ cắn -8%',ult:{n:'Túi Thần Kỳ',type:'wealth',cd:80,dur:25,desc:'x2 xu và +50% giá bán trong 25s'}},
+{n:'Đao Thần Tóc Đỏ',src:'Anime / Kenshin',cost:6000,hair:'#e76f51',hs:'pony',outfit:'#b23a2e',accent:'#ffffff',acc:'mask',weapon:'sword',aura:'',pass:{ring:1.15},pt:'Vòng cắn hoàn hảo rộng +15%',ult:{n:'Phi Yến Tuyệt Kỹ',type:'catch',cd:70,mult:2,desc:'Bắt ngay cá đang cắn với giá x2'}},
+{n:'Đại Bát Vương Săn Thần',src:'Anime / Dragon Ball',cost:9000,hair:'#6ee7f7',hs:'spike',outfit:'#457b9d',accent:'#ffffff',acc:'none',weapon:'gauntlet',aura:'#6ee7f7',pass:{pull:1.15},pt:'Lực kéo +15%',ult:{n:'Final Flash Wave',type:'boss',cd:90,dmg:.5,desc:'Trùm mất 50% máu, cá thường bị bắt ngay'}},
+{n:'Nhãn Thuật Ma Vương',src:'Anime / Naruto',cost:13000,hair:'#1b1a2e',hs:'long',outfit:'#262340',accent:'#e76f51',acc:'mask',weapon:'none',aura:'#e76f51',pass:{rare:1.2},pt:'Cá hiếm +20%',ult:{n:'Amaterasu Net',type:'lure',cd:75,mult:2.5,desc:'Dụ cá hiếm nhất khu vực, bắt với giá x2.5'}},
+{n:'Kiếm Sĩ Tam Đao',src:'Anime / One Piece',cost:18000,hair:'#8ab17d',hs:'short',outfit:'#264653',accent:'#ffffff',acc:'band',weapon:'sword',aura:'',pass:{pull:1.15},pt:'Lực kéo +15%',ult:{n:'Tam Thiên Thế Giới',type:'catch',cd:65,mult:2.1,desc:'Bắt ngay cá đang cắn với giá x2.1'}},
+{n:'Ma Đạo Thủy Tộc Gray',src:'Anime / Fairy Tail',cost:25000,hair:'#cfd8dc',hs:'spike',outfit:'#8d99ae',accent:'#6ee7f7',acc:'none',weapon:'orb',aura:'#a8dadc',pass:{ring:1.1},pt:'Vòng cắn hoàn hảo rộng +10%',ult:{n:'Ice-Make Speargun',type:'guard',cd:80,dur:20,desc:'Xóa hiệu ứng xấu, miễn nhiễm thời tiết 20s'}},
+{n:'Hỏa Long Ma Đạo',src:'Anime / Fairy Tail',cost:34000,hair:'#f15bb5',hs:'spike',outfit:'#1b1a2e',accent:'#e76f51',acc:'none',weapon:'gauntlet',aura:'#f29e4c',pass:{coin:1.1},pt:'Xu +10%',ult:{n:'Hỏa Long Hồng Liên Pháo',type:'boss',cd:90,dmg:.45,desc:'Trùm mất 45% máu, cá thường bị bắt ngay'}},
+{n:'Tộc Trưởng Chuột Ma Thuật',src:'Anime / Pokemon',cost:46000,hair:'#fee440',hs:'short',outfit:'#e9c46a',accent:'#f29e4c',acc:'ears',weapon:'none',aura:'#fee440',pass:{pull:1.12},pt:'Lực kéo +12%',ult:{n:'Vạn Thập Điện Quang',type:'stun',cd:60,dur:9,desc:'Choáng cá 9s, chờ cắn cực nhanh'}},
+{n:'Khai Sáng Giả Titania',src:'Anime / Fairy Tail',cost:60000,hair:'#e76f51',hs:'long',outfit:'#cfd8dc',accent:'#fee440',acc:'crown',weapon:'sword',aura:'#ffffff',pass:{pull:1.18},pt:'Lực kéo +18%',ult:{n:'Hoán Trang Thủy Thần Giáp',type:'guard',cd:85,dur:20,desc:'Xóa hiệu ứng xấu, miễn nhiễm thời tiết 20s'}},
+{n:'Bạch Nhãn Nhẫn Giả',src:'Anime / Naruto',cost:78000,hair:'#9b5de5',hs:'short',outfit:'#e9e3d5',accent:'#9b5de5',acc:'band',weapon:'none',aura:'#9b5de5',pass:{rare:1.15},pt:'Cá hiếm +15%',ult:{n:'Bát Quái Chưởng Thủy Vực',type:'lure',cd:72,mult:2.4,desc:'Dụ cá hiếm nhất khu vực, bắt với giá x2.4'}},
+{n:'Iron Armor Genius',src:'Marvel',cost:100000,hair:'#7a4418',hs:'short',outfit:'#b23a2e',accent:'#fee440',acc:'mask',weapon:'gauntlet',aura:'#6ee7f7',pass:{coin:1.12},pt:'Xu +12%',ult:{n:'Unibeam Magnet',type:'wealth',cd:80,dur:25,desc:'x2 xu và +50% giá bán trong 25s'}},
+{n:'Thần Sấm Giáp Vàng',src:'Marvel',cost:130000,hair:'#fee440',hs:'long',outfit:'#e9c46a',accent:'#b23a2e',acc:'crown',weapon:'hammer',aura:'#fee440',pass:{pull:1.2},pt:'Lực kéo +20%',ult:{n:'Bão Sét Asgard',type:'stun',cd:62,dur:10,desc:'Choáng cá 10s, vòng cắn mở rộng'}},
+{n:'Thần Cụ Cây Bảo Hộ',src:'Marvel',cost:165000,hair:'#8ab17d',hs:'spike',outfit:'#8ab17d',accent:'#bc6c25',acc:'horns',weapon:'staff',aura:'#8ab17d',pass:{wait:.85,rare:1.05},pt:'Chờ cắn -15%, cá hiếm +5%',ult:{n:'Trụ Rễ Cây Đại Dương',type:'guard',cd:78,dur:22,desc:'Xóa hiệu ứng xấu, miễn nhiễm thời tiết 22s'}},
+{n:'Phù Thủy Thời Gian',src:'Marvel',cost:210000,hair:'#1b1a2e',hs:'long',outfit:'#264653',accent:'#fee440',acc:'halo',weapon:'orb',aura:'#fee440',pass:{wait:.8,coin:1.05},pt:'Chờ cắn -20%, xu +5%',ult:{n:'Mắt Thần Thời Gian',type:'stun',cd:70,dur:10,desc:'Ngưng đọng thời gian 10s, cá chờ cắn cực nhanh'}}];
 
 /* Hồ cá: sức chứa 4 + 2*lv, thu nhập mỗi phút = giá trị * AQ_RATE */
 const AQ_RATE=0.02,AQ_MAX_LV=8,AQ_POOL_CAP=7200;
@@ -172,6 +255,7 @@ function fishArt(id,f){if(FISH[id].k)return itemArt(FISH[id].k,f);return get(`fa
   const sp=FISH[id];
   return mk(64,40,g=>{
     const tw=f?5:0;
+    if(sp.aura){const rg=g.createRadialGradient(30,20,3,30,20,27);const ac=P[sp.aura]||sp.aura;rg.addColorStop(0,ac);rg.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=.5;g.fillStyle=rg;g.beginPath();g.arc(30,20,27,0,7);g.fill();g.globalAlpha=1}
     poly(g,[[10,20],[1,8-tw],[4,20],[1,32+tw]],P[sp.f],1.5);
     g.save();
     ell(g,30,20,22,12,0,lin(g,8,32,P[sp.l],P[sp.d]),0);
@@ -182,6 +266,7 @@ function fishArt(id,f){if(FISH[id].k)return itemArt(FISH[id].k,f);return get(`fa
     if(sp.p==='plain'){g.globalAlpha=.35;ell(g,30,16,14,4,0,P[sp.b],0)}
     g.restore();g.globalAlpha=1;
     poly(g,[[24,9],[31,0],[40,9]],P[sp.f],1.5);
+    if(sp.horn)poly(g,[[23,10],[19,2],[29,7]],P[sp.f],1.5);
     g.beginPath();g.ellipse(30,20,22,12,0,0,Math.PI*2);g.strokeStyle=INK;g.lineWidth=2;g.stroke();
     g.beginPath();g.arc(40,20,4,-1.2,1.2);g.strokeStyle=INK;g.lineWidth=1.4;g.stroke();
     g.beginPath();g.arc(46,17,3.4,0,7);g.fillStyle='#fff';g.fill();
@@ -495,6 +580,119 @@ function boatArt(lv){return get('boatV'+lv,()=>mk(96,40,g=>{
   if(lv>=2){ell(g,20,8,3,3,0,P.gold,1)}
   if(lv>=3){g.beginPath();g.moveTo(78,8);g.lineTo(78,-18);g.strokeStyle=INK;g.lineWidth=2;g.stroke();poly(g,[[78,-18],[92,-13],[78,-8]],P.gold,1)}
   if(lv>=6){poly(g,[[82,-14],[82,6],[62,6]],'#ffffff',1.5)}
+  if(lv>=4){for(const x of [22,34,46,58]){ell(g,x,18,3.4,3.4,0,P.grey,1.2);ell(g,x,18,1.4,1.4,0,P.deep,0)}}
+  if(lv>=5){g.beginPath();g.roundRect(62,-8,6,14,2);g.fillStyle=P.ice;g.fill();g.strokeStyle=INK;g.lineWidth=1.4;g.stroke();g.beginPath();g.moveTo(65,-8);g.lineTo(65,-14);g.strokeStyle=INK;g.stroke()}
+  if(lv>=7){g.globalAlpha=.85;for(let x=12;x<88;x+=14)poly(g,[[x,10],[x+3,3],[x+6,10]],P.ice,1);g.globalAlpha=1}
+  if(lv>=9){g.strokeStyle=P.pink;g.lineWidth=1.4;g.beginPath();g.moveTo(10,24);g.lineTo(84,24);g.stroke();g.strokeStyle=P.cyan;g.beginPath();g.moveTo(12,27);g.lineTo(80,27);g.stroke()}
+  if(lv>=10){g.globalAlpha=.55;ell(g,6,14,9,9,0,P.violet,1.5);g.globalAlpha=1}
+}))}
+
+/** Nhân vật skin: thân chibi dùng chung, đổi tóc/áo/phụ kiện/vũ khí theo cấu hình */
+function skinArt(i,f){return get('sk'+i+'_'+f,()=>mk(64,96,g=>{
+  const s=SKINS[i]||SKINS[0];
+  const hair=P[s.hair]||s.hair,cloth=P[s.outfit]||s.outfit,acc=P[s.accent]||s.accent,skinTone='#f2c9a0',dark='#8a5a3c';
+  if(s.aura){const rg=g.createRadialGradient(32,46,6,32,46,36);rg.addColorStop(0,s.aura);rg.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=.35;g.fillStyle=rg;g.fillRect(0,2,64,82);g.globalAlpha=1}
+  /* vũ khí sau lưng */
+  if(s.weapon==='sword'){g.beginPath();g.moveTo(50,64);g.lineTo(60,20);g.strokeStyle=INK;g.lineWidth=3.2;g.stroke();g.strokeStyle='#cfd8dc';g.lineWidth=1.8;g.stroke();poly(g,[[47,64],[56,62],[52,70]],P.gold,1)}
+  if(s.weapon==='staff'){g.beginPath();g.moveTo(52,86);g.lineTo(58,22);g.strokeStyle=INK;g.lineWidth=3;g.stroke();g.strokeStyle=P.brown;g.lineWidth=2;g.stroke();ell(g,59,18,4,4,0,acc,1.2)}
+  /* chân */
+  g.beginPath();g.roundRect(23,68,8,18,3);g.fillStyle=P.deep;g.fill();g.strokeStyle=INK;g.lineWidth=1.6;g.stroke();
+  g.beginPath();g.roundRect(33,68,8,18,3);g.fill();g.stroke();
+  ell(g,27,88,6,2.4,0,P.ink,0);ell(g,37,88,6,2.4,0,P.ink,0);
+  /* thân */
+  poly(g,[[21,36+f],[43,36+f],[47,70],[17,70]],lin(g,36,70,cloth,P.deep),2);
+  g.beginPath();g.moveTo(21,52);g.lineTo(43,52);g.strokeStyle=acc;g.lineWidth=2.4;g.stroke();
+  /* tay */
+  g.beginPath();g.roundRect(13,40,7,20,3);g.fillStyle=cloth;g.fill();g.strokeStyle=INK;g.lineWidth=1.6;g.stroke();
+  g.beginPath();g.roundRect(44,40,7,20,3);g.fill();g.stroke();
+  ell(g,16,61,4,4,0,skinTone,1.4);ell(g,48,61,4,4,0,skinTone,1.4);
+  /* tóc dài phía sau đầu */
+  if(s.hs==='long'){
+    ell(g,32,21,16,16,0,hair,2);
+    g.beginPath();g.roundRect(14,24,7,26,3);g.fillStyle=hair;g.fill();g.strokeStyle=INK;g.lineWidth=1.4;g.stroke();
+    g.beginPath();g.roundRect(43,24,7,26,3);g.fill();g.stroke();
+  }
+  /* đầu */
+  ell(g,32,23,12,13,0,skinTone,2);
+  /* tóc */
+  if(s.hs==='long'){poly(g,[[19,17],[26,11],[34,10],[45,17],[42,22],[32,17],[22,22]],hair,1.6)}
+  else if(s.hs==='spike'){poly(g,[[19,18],[24,4],[28,15],[32,2],[36,15],[41,3],[45,18],[32,14]],hair,2)}
+  else if(s.hs==='pony'){ell(g,32,19,14,12,0,hair,2);g.beginPath();g.moveTo(44,18);g.quadraticCurveTo(56,26,52,40);g.quadraticCurveTo(47,30,42,24);g.closePath();g.fillStyle=hair;g.fill();g.strokeStyle=INK;g.lineWidth=1.4;g.stroke()}
+  else if(s.hs==='bun'){ell(g,32,19,14,12,0,hair,2);ell(g,32,7,5,4,0,hair,1.5)}
+  else{ell(g,32,18,14,10,0,hair,2);g.beginPath();g.moveTo(18,20);g.lineTo(46,20);g.strokeStyle=INK;g.lineWidth=1.2;g.stroke()}
+  /* mắt + miệng */
+  ell(g,27,24+f,1.8,2.4,0,P.ink,0);ell(g,37,24+f,1.8,2.4,0,P.ink,0);
+  if(f){g.beginPath();g.moveTo(26,24);g.lineTo(29,24);g.moveTo(35,24);g.lineTo(38,24);g.strokeStyle=skinTone;g.lineWidth=2.2;g.stroke()}
+  g.beginPath();g.arc(32,30,2.6,0.15,2.99);g.strokeStyle=P.ink;g.lineWidth=1.3;g.stroke();
+  /* phụ kiện */
+  if(s.acc==='band'){g.fillStyle=acc;g.fillRect(19,17,26,4);g.strokeStyle=INK;g.lineWidth=1;g.strokeRect(19,17,26,4);poly(g,[[19,19],[12,15],[13,23]],acc,1)}
+  if(s.acc==='straw'){ell(g,32,11,20,4,0,P.sand,1.6);poly(g,[[18,11],[32,-2],[46,11]],P.sand,1.6);g.fillStyle=P.red;g.fillRect(22,8,20,2.4)}
+  if(s.acc==='crown'){poly(g,[[22,12],[24,3],[28,9],[32,2],[36,9],[40,3],[42,12]],P.gold,1.4);ell(g,32,9,1.8,1.8,0,P.red,0)}
+  if(s.acc==='ears'){ell(g,21,10,4,5,0,hair,1.4);ell(g,43,10,4,5,0,hair,1.4);ell(g,21,10,1.8,2.6,0,P.pink,0);ell(g,43,10,1.8,2.6,0,P.pink,0)}
+  if(s.acc==='mask'){g.fillStyle=P.ink;g.fillRect(18,19,28,5);g.globalAlpha=.55;g.fillStyle=P.red;g.fillRect(24,20,4,3);g.fillRect(36,20,4,3);g.globalAlpha=1}
+  if(s.acc==='horns'){poly(g,[[22,12],[18,2],[27,10]],acc,1.4);poly(g,[[42,12],[46,2],[37,10]],acc,1.4)}
+  if(s.acc==='halo'){g.globalAlpha=.85;g.beginPath();g.ellipse(32,-1,10,3,0,0,7);g.strokeStyle=P.gold;g.lineWidth=2;g.stroke();g.globalAlpha=1}
+  if(s.acc==='cap'){g.beginPath();g.ellipse(32,13,15,5,0,0,7);g.fillStyle=cloth;g.fill();g.strokeStyle=INK;g.lineWidth=1.4;g.stroke();poly(g,[[18,13],[46,13],[44,5],[20,5]],cloth,1.4)}
+  /* vũ khí trước tay */
+  if(s.weapon==='rod'){g.beginPath();g.moveTo(46,60);g.quadraticCurveTo(56,34,62,18);g.strokeStyle=P.brown;g.lineWidth=2.4;g.stroke()}
+  if(s.weapon==='orb'){const rg2=g.createRadialGradient(52,36,1,52,36,8);rg2.addColorStop(0,'#ffffff');rg2.addColorStop(1,s.aura||P.cyan);ell(g,52,36,7.5,7.5,0,rg2,1.2);g.beginPath();g.arc(52,36,4,0,7);g.strokeStyle='rgba(255,255,255,.8)';g.lineWidth=1;g.stroke()}
+  if(s.weapon==='gauntlet'){poly(g,[[43,54],[56,52],[58,62],[45,64]],P.grey,1.6);ell(g,50,58,4,3,0,P.gold,0)}
+  if(s.weapon==='hammer'){g.beginPath();g.moveTo(48,62);g.lineTo(54,36);g.strokeStyle=P.brown;g.lineWidth=3.2;g.stroke();g.beginPath();g.roundRect(47,16,20,12,3);g.fillStyle=P.grey;g.fill();g.strokeStyle=INK;g.lineWidth=1.6;g.stroke()}
+}))}
+
+/** Icon chiêu cuối theo 6 kiểu hiệu ứng */
+function ultIcon(t){return get('ult'+t,()=>mk(32,32,g=>{
+  switch(t){
+  case 'stun':
+    g.beginPath();g.arc(16,16,12,0,7);g.fillStyle='rgba(110,231,247,.25)';g.fill();g.strokeStyle=P.cyan;g.lineWidth=2;g.stroke();
+    for(let k=0;k<3;k++){g.beginPath();g.arc(16,16,5+k*3,0.4,2.3);g.strokeStyle=k%2?P.white:P.gold;g.lineWidth=1.4;g.stroke()}
+    poly(g,[[16,2],[10,15],[15,15],[12,29],[23,13],[17,13],[21,2]],P.gold,1.2);
+    break;
+  case 'catch':
+    g.beginPath();g.moveTo(9,4);g.lineTo(9,17);g.arc(15,17,6,Math.PI,0);g.strokeStyle=P.ice;g.lineWidth=2.2;g.stroke();
+    ell(g,23,24,7,4.4,0,P.orange,1.4);poly(g,[[17,24],[11,20],[11,28]],P.orange,1.2);
+    break;
+  case 'boss':
+    ell(g,16,14,10,9,0,'#e9e3d5',1.6);
+    g.fillStyle=P.ink;ell(g,12,13,2.4,2.8,0,P.ink,0);ell(g,20,13,2.4,2.8,0,P.ink,0);
+    g.fillStyle=P.red;g.fillRect(13,20,6,4);g.beginPath();g.moveTo(13,24);g.lineTo(19,24);g.strokeStyle=P.red;g.lineWidth=2;g.stroke();
+    g.beginPath();g.moveTo(6,26);g.lineTo(26,26);g.strokeStyle=P.gold;g.lineWidth=2;g.stroke();
+    break;
+  case 'wealth':
+    for(const [x,y] of [[11,12],[21,10],[16,21]]){ell(g,x,y,7,7,0,P.gold,1.4);g.beginPath();g.arc(x,y,3.4,0,7);g.strokeStyle=P.brown;g.lineWidth=1;g.stroke()}
+    g.fillStyle='#fff';g.fillRect(9,8,1.6,1.6);g.fillRect(19,6,1.6,1.6);
+    break;
+  case 'guard':
+    poly(g,[[16,2],[28,7],[26,20],[16,30],[6,20],[4,7]],'rgba(168,218,220,.45)',1.8);
+    poly(g,[[16,7],[23,10],[22,18],[16,25],[10,18],[9,10]],'rgba(110,231,247,.85)',1.2);
+    break;
+  default:{
+    const rg=g.createRadialGradient(16,16,2,16,16,14);rg.addColorStop(0,'#fff');rg.addColorStop(1,P.violet);ell(g,16,16,13,13,0,rg,1.4);
+    ell(g,13,16,3,2.2,0,'#fff',0);ell(g,20,16,3,2.2,0,'#fff',0);
+    for(let k=0;k<3;k++){const a=k*2.1;g.beginPath();g.moveTo(16+Math.cos(a)*7,16+Math.sin(a)*7);g.lineTo(16+Math.cos(a)*13,16+Math.sin(a)*13);g.strokeStyle=P.gold;g.lineWidth=1.4;g.stroke()}
+  }}
+}))}
+
+/** Icon hiệu ứng bất lợi của thời tiết */
+function debIcon(k){return get('deb'+k,()=>mk(24,24,g=>{
+  switch(k){
+  case 'heat':
+    g.beginPath();g.arc(12,12,6,0,7);g.fillStyle=P.orange;g.fill();for(let n=0;n<8;n++){const a=n*Math.PI/4;g.beginPath();g.moveTo(12+Math.cos(a)*8,12+Math.sin(a)*8);g.lineTo(12+Math.cos(a)*11,12+Math.sin(a)*11);g.strokeStyle=P.orange;g.lineWidth=1.6;g.stroke()}
+    ell(g,9,10,1.6,2.4,0,P.ink,0);ell(g,15,10,1.6,2.4,0,P.ink,0);g.beginPath();g.arc(12,16,3,3.4,6.1);g.strokeStyle=P.ink;g.lineWidth=1.4;g.stroke();
+    break;
+  case 'rust':
+    g.beginPath();g.moveTo(2,18);g.quadraticCurveTo(12,8,22,18);g.strokeStyle='#b06a3b';g.lineWidth=2.4;g.stroke();
+    g.strokeStyle='#7a4418';g.lineWidth=1.6;g.beginPath();g.moveTo(6,18);g.lineTo(6,21);g.moveTo(12,16);g.lineTo(12,22);g.moveTo(18,18);g.lineTo(18,21);g.stroke();
+    poly(g,[[15,5],[19,11],[14,11]],'#b06a3b',1);
+    break;
+  case 'shock':
+    poly(g,[[15,1],[6,13],[11,13],[8,23],[19,10],[13,10],[18,1]],P.gold,1.2);
+    g.beginPath();g.arc(6,16,3,0.6,2.6);g.strokeStyle=P.cyan;g.lineWidth=1.4;g.stroke();g.beginPath();g.arc(18,7,3,3.4,5.5);g.stroke();
+    break;
+  default:
+    for(let n=0;n<3;n++){g.beginPath();g.ellipse(12,8+n*5,9-n*1.4,3,0,0,7);g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=1.6;g.stroke()}
+    g.globalAlpha=.5;g.beginPath();g.ellipse(12,12,10,9,0,0,7);g.fillStyle=P.grey;g.fill();g.globalAlpha=1;
+  }
 }))}
 
 /** Icon pixel nhỏ cho cần câu theo tầng */
@@ -537,9 +735,13 @@ function sprite(key){
   if(key.startsWith('sil')&&!key.startsWith('silb:'))return silOf(+key.slice(3));
   if(key.startsWith('silb:'))return get('silb:'+key.slice(5),()=>tintOf(bossArt(key.slice(5),0)));
   if(key.startsWith('rodT'))return rodIcon(+key.slice(4));
+  if(key.startsWith('boatT'))return boatArt(+key.slice(5));
   if(key.startsWith('bagT'))return bagArt(+key.slice(4));
   if(key.startsWith('pa')){const [i,tt]=key.slice(2).split('_').map(Number);return petArt(i,tt,0)}
   if(key.startsWith('bs:'))return bossArt(key.slice(3),0);
+  if(key.startsWith('sk'))return skinArt(+key.slice(2),0);
+  if(key.startsWith('ult:'))return ultIcon(key.slice(4));
+  if(key.startsWith('deb:'))return debIcon(key.slice(4));
   const make=SPR[key];
   if(!make){console.warn('Sprite không tồn tại: '+key);return get('missing',()=>mk(8,8,g=>{g.fillStyle=P.red;g.fillRect(0,0,8,8)}))}
   return get('s:'+key,make);
@@ -566,8 +768,8 @@ function reflectArt(c,x,yTop,w,alpha){
 /* ================= 4. ECONOMY (hàm thuần) ================= */
 const Eco={
   cost:(k,lv)=>Math.floor(UP[k].b*Math.pow(UP[k].m,lv)),
-  cap:bag=>10+5*bag,
-  waitTime:(rod,mult)=>Math.max(0.5,rnd(1.5,4)*(1-0.07*(rod-1))*mult),
+  cap:(bag,boat=0)=>10+5*bag+(boat>=10?15:0),
+  waitTime:(rod,mult,boat=0)=>Math.max(0.55,rnd(1.4,3.6)*(1-0.06*(rod-1))*(1-0.025*boat)*mult),
   ringTime:(rod,mult)=>(0.5+0.06*rod)*mult,
   weight:(id,bait,rare)=>{const f=FISH[id];return (10/(1+f.r*1.5))*(f.r>0?(1+0.25*bait)*rare:1)},
   pick(ids,bait,rare){
@@ -577,24 +779,34 @@ const Eco={
     return ids[ids.length-1];
   },
   expValue(ids,bait,rare){let t=0,s=0;for(const i of ids){const w=Eco.weight(i,bait,rare);t+=w;s+=w*FISH[i].v}return s/t},
-  autoPerfect:rod=>Math.min(0.8,0.1+0.07*rod),
+  autoPerfect:rod=>Math.min(0.85,0.12+0.065*rod),
   comboMult:c=>1+0.2*Math.min(c,COMBO_MAX),
   petInterval:lv=>Math.max(2.5,7-0.4*lv),
-  rate(rod,boat,petLv,petIv){let r=0;if(boat>0)r+=1/(2.75*(1-0.07*(rod-1))+0.6);if(petLv>0)r+=1/(Eco.petInterval(petLv)*petIv);return r},
+  rate(rod,boat,petLv,petIv){let r=0;if(boat>0)r+=1/(2.7*(1-0.06*(rod-1))*(1-0.018*boat)+0.5);if(petLv>0)r+=1/(Eco.petInterval(petLv)*petIv);return r},
   /** Thu nhập hồ cá mỗi giây với các loài đang nuôi */
   aqPerSec:ids=>ids.reduce((a,id)=>a+FISH[id].v*AQ_RATE/60,0),
   aqCap:lv=>4+2*lv,
-  aqUpCost:lv=>Math.floor(500*Math.pow(2,lv)),
+  aqUpCost:lv=>Math.floor(300*Math.pow(2.3,lv)),
+  /* ---------- Thuyền ---------- */
+  boatCoin:lv=>lv>=9?1.15:lv>=5?1.12:lv>=2?1.08:1,
+  boatRare:lv=>lv>=8?1.15:1,
+  boatSell:lv=>lv>=7?1.1:1,
+  hullMax:lv=>3+lv,
+  repairCost:lv=>Math.floor(120*Math.pow(1.5,lv)),
+  /* Tự bán mở ở cấp 5, chu kỳ RẤT chậm: 5 phút và chỉ giảm còn 3 phút ở cấp 10 */
+  autoSellInterval:lv=>lv>=5?Math.max(180,300-24*(lv-5)):Infinity,
+  autoSellPrice:0.7,
 };
 
 /* ================= 5. STATE ================= */
-const newState=()=>({coins:0,auto:true,pres:0,lv:{rod:1,bait:0,boat:0,bag:0,hook:0,line:0},pets:[0,0,0,0,0,0,0,0,0],sel:0,zc:[0,0,0,0,0,0,0,0],bosses:{},zone:0,unl:[1,0,0,0,0,0,0,0],disc:{},cnt:0,inv:[],aq:{lv:0,pool:0,fish:[]},t:Date.now()});
+const newState=()=>({coins:0,auto:true,pres:0,lv:{rod:1,bait:0,boat:0,bag:0,hook:0,line:0},pets:[0,0,0,0,0,0,0,0,0],sel:0,zc:[0,0,0,0,0,0,0,0],bosses:{},zone:0,unl:[1,0,0,0,0,0,0,0],disc:{},cnt:0,inv:[],aq:{lv:0,pool:0,fish:[]},skin:0,skins:[0],hull:3,t:Date.now()});
 let G=newState();
 let phase='idle',waitLeft=0,biteT=0,ringDur=1,castT=0,autoT=0,t=0,squash=0,dirty=true;
 let combo=0,shakeT=0,shakeAmp=0,pendingId=null,pendingBoss=null,shadow=null,fight=null,bobY=BASE_Y,fightRing=0,reelAng=0;
 let weatherIdx=0,wTimer=60,lightning=0,bolt=null,boatWakeT=0;
+let debuff=null,shockT=0,shockWait=4,hullT=18,stunUntil=0,calmUntil=0,wealthUntil=0,ultReadyAt=0;
 let petS=PETS.map((_,i)=>({t:rnd(0,3)+i*.3,dive:null,fx:0}));
-let summoned=null,summonReady=0,aqOpen=false,tangleLeft=0,swarmT=0;
+let summoned=null,summonReady=0,aqOpen=false,tangleLeft=0,swarmT=0,autoSellT=0;
 let boostEnd=0,boostReadyAt=0,tab='up',lastSec=-1,lastEv=-1,sheetOpen=false;
 let bgZone=-1,bg=null,vig=null;
 let cssW=400,cssH=600,dpr=1,scale=1;
@@ -605,8 +817,26 @@ const tailFrame=()=>Math.floor(t*6)%2;
 const eventIdx=()=>Math.floor(Date.now()/EVENT_MS)%EVENTS.length;
 const petLvSel=()=>G.pets[G.sel];
 function mods(){
-  const w=WEATHER[weatherIdx],ev=EVENTS[eventIdx()];
-  return{rare:w.rare*ev.rare,wait:w.wait,ring:w.ring,coin:ev.coin*(1+0.5*G.pres),speed:ev.speed*(Date.now()<boostEnd?2:1)};
+  const w=WEATHER[weatherIdx],ev=EVENTS[eventIdx()],sk=SKINS[G.skin]||SKINS[0],pf=sk.pass||{};
+  const now=Date.now(),calm=now<calmUntil,dead=!!debuff&&!calm,stunned=now<stunUntil,rich=now<wealthUntil;
+  return{
+    rare:w.rare*ev.rare*(pf.rare||1)*Eco.boatRare(G.lv.boat),
+    wait:w.wait*(pf.wait||1)*(dead&&debuff.k==='heat'?1.3:1)*(stunned?.4:1),
+    ring:w.ring*(pf.ring||1)*(stunned?1.9:1),
+    coin:ev.coin*(1+0.5*G.pres)*(pf.coin||1)*Eco.boatCoin(G.lv.boat)*(rich?2:1),
+    speed:ev.speed*(Date.now()<boostEnd?2:1),
+    fog:!!w.fog&&!calm,
+    pull:(pf.pull||1)*(dead&&debuff.k==='heat'?.72:1)*(stunned?2:1),
+    calm,
+  };
+}
+/** Gán hiệu ứng bất lợi mỗi lần thời tiết đổi */
+function applyWeatherDebuff(){
+  const w=WEATHER[weatherIdx];
+  debuff={k:w.deb,t:wTimer};
+  shockT=0;shockWait=rnd(6,10);hullT=rnd(14,22);
+  float('deb:'+w.deb,'',W/2,WL-112);
+  touch();
 }
 
 /* ================= 6. FX (vật lý nước và hạt) ================= */
@@ -645,7 +875,7 @@ function petEmit(i,x,y,big){
 /* ================= 7. ACTIONS ================= */
 function cast(){
   const m=mods();
-  phase='wait';waitLeft=Eco.waitTime(G.lv.rod,m.wait);castT=0.16;
+  phase='wait';waitLeft=Eco.waitTime(G.lv.rod,m.wait,G.lv.boat);castT=0.16;
   pendingId=Eco.pick(ZONES[G.zone].fish,G.lv.bait,m.rare);
   const cands=BOSSES.filter(b=>b.z.includes(G.zone));
   pendingBoss=summoned||((G.zc[G.zone]>=BOSS_EVERY&&cands.length)?cands[Math.floor(Math.random()*cands.length)]:null);
@@ -683,11 +913,11 @@ function bossEscape(){fight=null;phase='idle';autoT=0.6;combo=0;float('cross',''
 function ringRadius(){return Math.max(0,RING_R0*(1-biteT/ringDur))}
 /** Cá bay về túi, kéo theo tia nước. Trả về false nếu túi đầy và không có tự bán. */
 function reelFish(x0,y0,perfect,mult,id,ex=null){
-  if(G.inv.length>=Eco.cap(G.lv.bag)&&G.lv.boat<3)return false;
+  if(G.inv.length>=Eco.cap(G.lv.bag,G.lv.boat))return false;
   const m=mods(),er=ex?ex.rare:1,ec=ex?ex.coin:1;
   const fid=id??Eco.pick(ZONES[G.zone].fish,G.lv.bait,m.rare*er);
   const v=Math.round(FISH[fid].v*rnd(.85,1.15)*(perfect?2:1)*mult*m.coin*ec);
-  flights.push({id:fid,v,auto:G.lv.boat>=3,p:0,x0,y0});
+  flights.push({id:fid,v,p:0,x0,y0});
   if(y0<WL)splash(x0,WL,8,1.2);
   G.disc[fid]=1;G.cnt++;G.zc[G.zone]=(G.zc[G.zone]||0)+1;
   if(perfect)burst(x0,y0-10,['gold'],6,true);
@@ -705,6 +935,7 @@ function hook(perfect){
 }
 function escape(){phase='idle';autoT=0.6;pendingId=null;pendingBoss=null;shadow=null;combo=0;float('cross','',BX,bobY-30);touch()}
 function tap(){
+  if(shockT>0){shakeT=.15;shakeAmp=2;float('deb:shock','',BX,bobY-26);touch();return}
   if(phase==='idle'){cast();return}
   if(phase==='bite'){const r=ringRadius(),pr=perfectRange();hook(r>=pr[0]&&r<=pr[1]);return}
   if(phase==='fight'){fightHit();return}
@@ -721,6 +952,7 @@ function buyUp(k){
   const before=TIER[k](lv);
   G.coins-=c;
   if(k==='pet')G.pets[G.sel]=lv+1;else G.lv[k]=lv+1;
+  if(k==='boat')G.hull=Math.min(Eco.hullMax(G.lv.boat),G.hull+1);
   if(TIER[k](lv+1)>before){burst(W/2,WL-40,['gold','white'],24,true);float('star','',W/2,WL-70);shakeT=0.2;shakeAmp=2}
   else burst(W/2,WL-40,['gold','sun'],10,true);
   touch();
@@ -743,13 +975,82 @@ function tapZone(i){
 /** Điều kiện mở khu vực: xu, cần câu, lưỡi câu và dây câu */
 function zoneReady(i){const z=ZONES[i];return (i===0||G.unl[i-1]===1)&&G.coins>=z.cost&&G.lv.rod>=z.rod&&G.lv.hook>=(z.hook||0)&&G.lv.line>=(z.line||0)}
 /** Khoảng cắn hoàn hảo: lưỡi câu càng cao càng rộng */
-const perfectRange=()=>[Math.max(3,PERFECT_MIN-0.35*G.lv.hook),PERFECT_MAX+0.5*G.lv.hook];
+const perfectRange=()=>{const off=WEATHER[weatherIdx].wind?Math.sin(t*2.2)*4:0;return[Math.max(3,PERFECT_MIN-0.35*G.lv.hook)+off,PERFECT_MAX+0.5*G.lv.hook+off]};
+/** Thuyền tự bán cả túi với 70% giá trị, nhịp rất chậm (5 phút ở cấp 5) */
+function autoSellBatch(){
+  if(!G.inv.length)return;
+  const sk=SKINS[G.skin]||SKINS[0],pf=sk.pass||{};
+  const sum=G.inv.reduce((a,it)=>a+it.v,0);
+  const gain=Math.round(sum*Eco.autoSellPrice*(1+0.5*G.pres)*Eco.boatSell(G.lv.boat)*(pf.sell||1)*(Date.now()<wealthUntil?1.5:1));
+  G.coins+=gain;G.inv=[];
+  float('coin','+'+fmt(gain),BAG_X,DECK_Y-44);burst(BAG_X,DECK_Y-40,['gold'],6);touch();
+}
 function sellAll(){
   if(!G.inv.length)return;
+  const sk=SKINS[G.skin]||SKINS[0],pf=sk.pass||{};
   const sum=G.inv.reduce((a,it)=>a+it.v,0);
-  G.coins+=Math.round(sum*(1+0.5*G.pres));G.inv=[];
-  float('coin','+'+fmt(sum),BAG_X,DECK_Y-44);
+  const gain=Math.round(sum*(1+0.5*G.pres)*Eco.boatSell(G.lv.boat)*(pf.sell||1)*(Date.now()<wealthUntil?1.5:1));
+  G.coins+=gain;G.inv=[];
+  float('coin','+'+fmt(gain),BAG_X,DECK_Y-44);
   burst(BAG_X,DECK_Y-40,['gold'],10);
+  touch();
+}
+/** Thuyền còn sống (đủ độ bền) mới tự câu được */
+const boatAlive=()=>G.lv.boat>0&&G.hull>0;
+/** Mua skin nhân vật; đã mua thì đổi để dùng nội tại và chiêu cuối của skin đó */
+function buySkin(i){
+  const sk=SKINS[i];
+  if(!sk||G.skins.includes(i))return;
+  if(G.coins<sk.cost)return;
+  G.coins-=sk.cost;G.skins.push(i);G.skin=i;
+  burst(W/2,WL-40,['gold','white',sk.aura||'gold'],26,true);float('star','',W/2,WL-70);shakeT=.25;shakeAmp=2;touch();
+}
+function pickSkin(i){if(G.skins.includes(i)){G.skin=i;burst(FISH_X,DECK_Y-40,[SKINS[i].aura||'gold','white'],8,true);touch()}}
+/** Sửa thuyền: trả xu theo số điểm bền còn thiếu */
+function repairBoat(){
+  const max=Eco.hullMax(G.lv.boat),miss=max-G.hull;
+  if(miss<=0)return;
+  const cost=Eco.repairCost(G.lv.boat)*miss;
+  if(G.coins<cost)return;
+  G.coins-=cost;G.hull=max;burst(BOAT_X,BOAT_Y-20,['gold','ice'],14,true);touch();
+}
+/** Bắt ngay không qua vòng cắn */
+function instantCatch(mult=2){
+  if(phase==='fight'){if(fight){fight.hp=Math.max(0,fight.hp-Math.ceil(fight.max*.35));fight.jerk=.3;if(fight.hp<=0)winFight()}return}
+  let id=pendingId;
+  if(id===null||id===undefined)id=Eco.pick(ZONES[G.zone].fish,G.lv.bait,mods().rare);
+  if(reelFish(BX,bobY,true,mult,id)){combo=Math.min(combo+1,COMBO_MAX);burst(BX,bobY-10,['gold','white'],14,true)}
+  else float('bagT0','',BAG_X,DECK_Y-40);
+  phase='idle';pendingId=null;pendingBoss=null;shadow=null;autoT=.6;
+}
+/** Chiêu cuối của skin đang dùng */
+function useUlt(){
+  const sk=SKINS[G.skin]||SKINS[0],u=sk.ult,now=Date.now();
+  if(!u||now<ultReadyAt)return;
+  ultReadyAt=now+u.cd*1000;
+  burst(FISH_X,DECK_Y-40,[sk.aura||'gold','white'],18,true);
+  ring(BX,WL,44,1.2);shakeT=.25;shakeAmp=3;
+  if(u.type==='catch'){instantCatch(u.mult||2);float('ult:catch','',W/2,WL-92)}
+  else if(u.type==='stun'){
+    stunUntil=now+(u.dur||8)*1000;
+    if(phase==='wait')waitLeft=Math.min(waitLeft,.4);
+    if(phase==='bite')biteT=Math.min(biteT,ringDur*.5);
+    float('ult:stun','',W/2,WL-92);
+  }else if(u.type==='boss'){
+    if(fight){fight.hp=Math.max(0,fight.hp-Math.ceil(fight.max*(u.dmg||.45)));fight.jerk=.3;splash(BX,bobY,14,1.8);if(fight.hp<=0)winFight()}
+    else instantCatch(2);
+    float('ult:boss','',W/2,WL-92);
+  }else if(u.type==='wealth'){wealthUntil=now+(u.dur||25)*1000;float('coin','x2',W/2,WL-92)}
+  else if(u.type==='guard'){
+    calmUntil=now+(u.dur||20)*1000;debuff=null;shockT=0;
+    if(phase==='tangle'){phase='wait';tangleLeft=0}
+    G.hull=Math.min(Eco.hullMax(G.lv.boat),G.hull+2);float('ult:guard','',W/2,WL-92);
+  }else if(u.type==='lure'){
+    const ids=ZONES[G.zone].fish;
+    const best=ids.reduce((a,b)=>FISH[b].r>FISH[a].r||(FISH[b].r===FISH[a].r&&FISH[b].v>FISH[a].v)?b:a,ids[0]);
+    if(!reelFish(BX,bobY,true,u.mult||2.5,best))float('bagT0','',BAG_X,DECK_Y-40);
+    float('ult:lure','',W/2,WL-92);
+  }
   touch();
 }
 /** Hồ cá: thả loài đang có trong túi vào hồ, tối đa sức chứa */
@@ -776,7 +1077,7 @@ function aqUpgrade(){
 }
 /** Đưa một con trong hồ về túi để thả con khác vào thay */
 function aqRemove(k){
-  if(G.inv.length>=Eco.cap(G.lv.bag)){float('bagT0','',W-54,WL-10);touch();return}
+  if(G.inv.length>=Eco.cap(G.lv.bag,G.lv.boat)){float('bagT0','',W-54,WL-10);touch();return}
   const id=G.aq.fish.splice(k,1)[0];
   if(id===undefined)return;
   G.inv.push({id,v:FISH[id].v});touch();
@@ -797,7 +1098,7 @@ function summonBoss(b){
 function prestige(){
   if(G.unl[7]!==1)return;
   G.pres++;G.coins=0;G.lv={rod:1,bait:0,boat:0,bag:0,hook:0,line:0};G.inv=[];
-  G.zone=0;G.unl=[1,0,0,0,0,0,0,0];G.zc=[0,0,0,0,0,0,0,0];
+  G.zone=0;G.unl=[1,0,0,0,0,0,0,0];G.zc=[0,0,0,0,0,0,0,0];G.hull=Eco.hullMax(0);
   phase='idle';pendingBoss=null;summoned=null;shadow=null;fight=null;autoT=0.5;tangleLeft=0;
   bgZone=-1;regen();burst(W/2,WL-40,['gold','violet'],30,true);float('star','',W/2,WL-70);touch();
 }
@@ -861,13 +1162,15 @@ function update(dt){
   if(castT>0)castT-=dt;
   if(squash>0)squash-=dt;
   if(shakeT>0)shakeT-=dt;
+  if(Eco.autoSellInterval(G.lv.boat)!==Infinity&&boatAlive()&&G.inv.length){autoSellT-=dt;if(autoSellT<=0){autoSellT=Eco.autoSellInterval(G.lv.boat);autoSellBatch()}}
   if(swarmT>0)swarmT-=dt;else if(Math.random()<dt/80&&phase!=='fight'){swarmT=22;float('fish10','',W/2,WL-70)}
 
   if(phase==='idle'){
-    const canAuto=G.auto&&G.lv.boat>0&&(G.inv.length<Eco.cap(G.lv.bag)||G.lv.boat>=3);
+    const canAuto=G.auto&&boatAlive()&&G.inv.length<Eco.cap(G.lv.bag,G.lv.boat);
     if(canAuto){autoT-=dt;if(autoT<=0)cast()}
   }else if(phase==='wait'){
-    if(!summoned&&!pendingBoss&&Math.random()<dt*0.03){phase='tangle';tangleLeft=Math.max(2,4-Math.floor(G.lv.line/3));float('cross','',BX,bobY-40)}
+    const rustChance=debuff&&debuff.k==='rust'&&Date.now()>=calmUntil?0.075:0.03;
+    if(!summoned&&!pendingBoss&&Math.random()<dt*rustChance){phase='tangle';tangleLeft=Math.max(2,4-Math.floor(G.lv.line/3));float('cross','',BX,bobY-40)}
     else waitLeft-=dt;
     if(shadow){
       shadow.el+=dt;
@@ -877,18 +1180,18 @@ function update(dt){
     if(waitLeft<=0)bite();
     if(Math.random()<dt*0.8)ring(BX+rnd(-16,16),bobY,8,.6);
   }else if(phase==='tangle'){
-    if(G.auto&&G.lv.boat>0)tangleLeft-=dt*1.5;
+    if(G.auto&&boatAlive())tangleLeft-=dt*1.5;
     if(tangleLeft<=0){phase='wait';splash(BX,bobY,5,.9)}
   }else if(phase==='bite'){
     biteT+=dt;
-    if(G.auto&&G.lv.boat>0&&biteT>0.35)hook(Math.random()<Eco.autoPerfect(G.lv.rod));
+    if(G.auto&&boatAlive()&&biteT>0.35)hook(Math.random()<Eco.autoPerfect(G.lv.rod));
     else if(biteT>ringDur)escape();
   }else if(phase==='fight'&&fight){
     fight.timer-=dt;fight.jerk=Math.max(0,fight.jerk-dt*4);
     fightRing-=dt;
     if(fightRing<=0){fightRing=.25;ring(BX+rnd(-40,40),WL+rnd(4,22),rnd(14,24),.9);bubble(BX+rnd(-20,20),bobY+rnd(0,10))}
-    if(G.auto&&G.lv.boat>0){
-      fight.acc+=dt*(1+0.3*G.lv.rod+0.2*G.lv.line);
+    if(G.auto&&boatAlive()){
+      fight.acc+=dt*mods().pull*(1+0.3*G.lv.rod+0.2*G.lv.line);
       while(fight.acc>=1&&fight&&fight.hp>0){fight.acc-=1;fightHit()}
     }
     if(fight&&fight.timer<=0)bossEscape();
@@ -916,7 +1219,23 @@ function update(dt){
 
   /* Thời tiết */
   wTimer-=dt;
-  if(wTimer<=0){weatherIdx=(weatherIdx+1+Math.floor(Math.random()*3))%WEATHER.length;wTimer=50+Math.random()*30;touch()}
+  if(wTimer<=0){
+    weatherIdx=(weatherIdx+1+Math.floor(Math.random()*3))%WEATHER.length;wTimer=50+Math.random()*30;
+    float(WEATHER[weatherIdx].ic,'',W/2,WL-90);shakeT=0.3;shakeAmp=2;touch();
+    applyWeatherDebuff();
+  }
+  /* Hiệu ứng bất lợi: đếm ngược, tê điện và cá mập đâm thuyền khi bão */
+  if(debuff&&debuff.t>0)debuff.t=Math.max(0,wTimer);
+  if(shockT>0)shockT-=dt;
+  if(debuff&&debuff.k==='shock'&&Date.now()>=calmUntil){
+    shockWait-=dt;
+    if(shockWait<=0){shockWait=rnd(6,10);shockT=1.5;lightning=.25;shakeT=.25;shakeAmp=3;float('deb:shock','',BX,bobY-30);touch()}
+    hullT-=dt;
+    if(hullT<=0&&G.lv.boat>0&&G.hull>0){
+      hullT=rnd(16,24);G.hull--;shakeT=.35;shakeAmp=4;
+      float('deb:shock','-1',BOAT_X,BOAT_Y-30);splash(BOAT_X,WL,10,1.4);touch();
+    }
+  }
   if(weatherIdx===2&&Math.random()<dt*0.2){
     const x0=rnd(60,340),pts=[[x0,0]];let x=x0;
     for(let k=1;k<=9;k++){x+=rnd(-14,14);pts.push([x,WL*k/9])}
@@ -960,8 +1279,7 @@ function update(dt){
     const f=flights[i];f.p+=dt/0.85;
     if(f.p>=1){
       flights.splice(i,1);
-      if(f.auto){G.coins+=f.v;float('coin','+'+fmt(f.v),BAG_X,DECK_Y-44)}
-      else{G.inv.push({id:f.id,v:f.v});float('fish'+f.id,'',BAG_X,DECK_Y-44)}
+      G.inv.push({id:f.id,v:f.v});float('fish'+f.id,'',BAG_X,DECK_Y-44);
       burst(BAG_X,DECK_Y-40,[RAR_KEYS[FISH[f.id].r]],6);
       touch();
     }else{
@@ -1129,7 +1447,7 @@ function drawRing(){
     ctx.setLineDash([3,3]);ctx.strokeStyle=P.ice;
     ctx.beginPath();ctx.arc(BX,bobY-6,(perfectRange()[0]+perfectRange()[1])/2,0,Math.PI*2);ctx.stroke();
     ctx.setLineDash([]);
-  }else if(phase==='idle'&&!(G.auto&&G.lv.boat>0)){
+  }else if(phase==='idle'&&!(G.auto&&boatAlive())){
     ctx.globalAlpha=.5+.3*Math.sin(t*4);ctx.strokeStyle=P.white;ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(BX,bobY-6,12+Math.sin(t*4)*2,0,Math.PI*2);ctx.stroke();
     ctx.globalAlpha=1;
@@ -1154,6 +1472,9 @@ function drawFight(){
 function drawWeather(){
   const w=weatherIdx;
   if(w===0){
+    ctx.strokeStyle=P.white;ctx.lineWidth=1;ctx.globalAlpha=.18;
+    for(let k=0;k<5;k++){const y=WL-30+k*6;ctx.beginPath();for(let x=0;x<=W;x+=8)ctx.lineTo(x,y+Math.sin(x*.05+t*3+k)*1.6);ctx.stroke()}
+    ctx.globalAlpha=1;
     const sx=330,sy=50;
     ctx.save();ctx.fillStyle=P.sun;
     for(let k=0;k<4;k++){
@@ -1179,6 +1500,31 @@ function drawWeather(){
       const x=((t*(12+k*6)+k*150)%(W+300))-150,y=WL-50+k*22;
       ctx.globalAlpha=.1;ctx.fillStyle=P.white;ctx.beginPath();ctx.ellipse(x,y,200,16,0,0,Math.PI*2);ctx.fill();
     }
+    ctx.globalAlpha=1;
+  }
+  /* Hiệu ứng bất lợi theo thời tiết */
+  if(debuff&&Date.now()>=calmUntil){
+    if(debuff.k==='heat'){
+      ctx.globalAlpha=.06;ctx.fillStyle=P.orange;ctx.fillRect(0,WL-60,W,H-WL+60);ctx.globalAlpha=1;
+      ctx.strokeStyle=P.orange;ctx.lineWidth=1;ctx.globalAlpha=.2;
+      for(let k=0;k<4;k++){const y=WL+32+k*42;ctx.beginPath();for(let x=0;x<=W;x+=6)ctx.lineTo(x,y+Math.sin(x*.04+t*2.2+k)*3);ctx.stroke()}
+      ctx.globalAlpha=1;
+    }
+    if(debuff.k==='rust'){
+      ctx.globalAlpha=.1;ctx.fillStyle=P.brown;ctx.fillRect(0,WL,W,H-WL);ctx.globalAlpha=1;
+      ctx.strokeStyle='#b06a3b';ctx.lineWidth=1;ctx.globalAlpha=.35;
+      for(let k=0;k<7;k++){const x=(k*67+31)%W;ctx.beginPath();ctx.moveTo(x,WL+4);ctx.lineTo(x+(k%2?3:-3),WL+16+(k*11)%40);ctx.stroke()}
+      ctx.globalAlpha=1;
+    }
+    if(debuff.k==='fog'){
+      ctx.globalAlpha=.26;ctx.fillStyle='#cfd8dc';ctx.fillRect(0,WL-24,W,H-WL+24);
+      for(let k=0;k<4;k++){const x=((t*(9+k*4)+k*120)%(W+260))-130,y=WL+10+k*30;ctx.globalAlpha=.16;ctx.fillStyle=P.white;ctx.beginPath();ctx.ellipse(x,y,180,20,0,0,7);ctx.fill()}
+      ctx.globalAlpha=1;
+    }
+  }
+  if(shockT>0){
+    ctx.strokeStyle=P.cyan;ctx.lineWidth=1.6;
+    for(let k=0;k<3;k++){ctx.globalAlpha=.35+.35*Math.sin(t*22+k);ctx.beginPath();ctx.arc(BX,bobY-6,9+k*5,t*3+k,t*3+k+2.2);ctx.stroke()}
     ctx.globalAlpha=1;
   }
   if(lightning>0){ctx.globalAlpha=Math.min(.45,lightning*1.5);ctx.fillStyle=P.white;ctx.fillRect(-10,-10,W+20,H+20);ctx.globalAlpha=1}
@@ -1229,6 +1575,7 @@ function drawTank(){
 function draw(){
   if(bgZone!==G.zone)buildBg();
   const bob=Math.round(Math.sin(t*1.5)*1.5);
+  const m=mods();
   ctx.setTransform(scale,0,0,scale,0,0);
   ctx.save();
   if(shakeT>0)ctx.translate(Math.round(rnd(-shakeAmp,shakeAmp)),Math.round(rnd(-shakeAmp,shakeAmp)));
@@ -1237,8 +1584,8 @@ function draw(){
   drawSky();
   drawWater();
 
-  for(const a of ambient)drawArt(fishArt(a.id,tailFrame()),a.x,a.y,46*FISH[a.id].s*.8,a.vx<0,ctx,.5);
-  if(shadow){
+  for(const a of ambient)drawArt(fishArt(a.id,tailFrame()),a.x,a.y,46*FISH[a.id].s*.8,a.vx<0,ctx,m.fog?.07:.5);
+  if(shadow&&!m.fog){
     if(shadow.boss)drawArt(sprite('silb:'+shadow.boss),shadow.x,shadow.y,96,true,ctx,.5);
     else drawArt(silOf(shadow.id),shadow.x,shadow.y,46*FISH[shadow.id].s*.8,true,ctx,.5);
   }
@@ -1257,7 +1604,10 @@ function draw(){
     const pp=petPosOf(i),dv=!!petS[i].dive;
     drawArt(petArt(i,TIER.pet(lv),tailFrame()),pp.x,pp.y+(dv?0:bob),42);
   }
-  drawArt(fisherArt(Math.floor(t*1.2)%2),FISH_X,DECK_Y+bob,40);
+  const skin=SKINS[G.skin]||SKINS[0];
+  if(skin.aura){ctx.globalAlpha=.16+.06*Math.sin(t*3);const ag=ctx.createRadialGradient(FISH_X,DECK_Y-34,4,FISH_X,DECK_Y-34,36);ag.addColorStop(0,skin.aura);ag.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ag;ctx.fillRect(FISH_X-36,DECK_Y-72,72,74);ctx.globalAlpha=1}
+  drawArt(skinArt(G.skin,Math.floor(t*1.2)%2),FISH_X,DECK_Y+bob,40);
+  if(G.lv.boat>0&&G.hull<=1){ctx.globalAlpha=.25+.2*Math.sin(t*8);const hg=ctx.createRadialGradient(BOAT_X,BOAT_Y-16,3,BOAT_X,BOAT_Y-16,32);hg.addColorStop(0,P.red);hg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=hg;ctx.fillRect(BOAT_X-36,BOAT_Y-50,72,60);ctx.globalAlpha=1}
 
   drawRod(bob);
   if(phase!=='fight'){
@@ -1308,7 +1658,7 @@ window.addEventListener('orientationchange',fit);
 /* ================= 11. UI ================= */
 const pips=(v,max)=>Array.from({length:max},(_,i)=>`<i class="${i<v?'on':''}"></i>`).join('');
 function upHTML(){
-  return UP_KEYS.map(k=>{
+  return UP_KEYS.filter(k=>k!=='boat').map(k=>{
     const lv=k==='pet'?petLvSel():G.lv[k],u=UP[k],max=lv>=u.max;
     const c=Eco.cost(k,lv),tier=TIER[k](lv);
     const icon=k==='rod'?'rodT'+tier:k==='bag'?'bagT'+tier:k==='pet'?'pa'+G.sel+'_'+tier:k;
@@ -1322,10 +1672,48 @@ function zoneHTML(){
     const ok=G.unl[i]===1;
     const can=zoneReady(i);
     const locked=!ok;
-    const foot=locked?`<div class="cost"><img class="ico" src="${iconURL('coin')}" alt="">${fmt(z.cost)}</div><div class="cost"><img class="ico" src="${iconURL('rodT0')}" alt="">${z.rod}</div>`:'';
+    const p=zonePct(i),pc=Math.round(p*100);
+    const foot=locked?`<div class="cost"><img class="ico" src="${iconURL('coin')}" alt="">${fmt(z.cost)}</div>`:`<div class="cost">${Math.min(G.zc[i]||0,BOSS_EVERY)}/${BOSS_EVERY} trùm</div>`;
     const disabled=(locked&&!can)||i===G.zone;
-    return `<button class="tile${i===G.zone?' on':''}" data-zone="${i}" ${disabled?'disabled':''}><img class="ico${locked?' dim':''}" src="${iconURL(z.ic)}" alt="">${foot}</button>`;
+    return `<button class="tile${i===G.zone?' on':''}" data-zone="${i}" title="${z.n}: ${locked?'mở khóa bằng xu, cần câu, lưỡi và dây':'tiến độ trùm'}" ${disabled?'disabled':''}><img class="ico${locked?' dim':''}" src="${iconURL(z.ic)}" alt=""><div class="prog${ok?' boss':''}"><i style="width:${pc}%"></i></div><div class="pct">${pc}%</div>${foot}</button>`;
   }).join('')+`<button class="tile" data-prestige="1" ${G.unl[7]!==1?'disabled':''}><img class="ico" src="${iconURL('star')}" alt=""><div class="cost">×${G.pres}</div></button>`;
+}
+/** Tiến độ từng khu vực: khóa thì tính theo yêu cầu thấp nhất, mở rồi thì theo số lần câu ra trùm */
+function zonePct(i){
+  const z=ZONES[i];
+  if(G.unl[i])return clamp((G.zc[i]||0)/BOSS_EVERY,0,1);
+  const parts=[(z.cost||0)>0?G.coins/z.cost:1,G.lv.rod/z.rod];
+  if(z.hook)parts.push(G.lv.hook/z.hook);
+  if(z.line)parts.push(G.lv.line/z.line);
+  return clamp(Math.min(...parts),0,1);
+}
+/** Tab thuyền: tên thuyền, độ bền, sửa chữa, chu kỳ tự bán và các cấp đã mở */
+function boatHTML(){
+  const lv=G.lv.boat,maxLv=UP.boat.max,maxed=lv>=maxLv,cost=Eco.cost('boat',lv);
+  const hullMax=Eco.hullMax(lv),miss=Math.max(0,hullMax-G.hull),repCost=Eco.repairCost(lv)*miss;
+  const sellInt=Eco.autoSellInterval(lv),next=BOATS[Math.min(lv+1,BOATS.length-1)];
+  const head=`<div class="row"><span>${BOATS[lv].n}</span><span>${lv}/${maxLv}</span></div>
+    <div class="row"><span>Độ bền</span><span>${G.hull}/${hullMax}</span><button class="btn" data-repair="1" ${miss<=0||G.coins<repCost?'disabled':''}>${miss<=0?'Đầy':'Sửa '+fmt(repCost)}</button></div>
+    <div class="row">${sellInt===Infinity?'Tự bán mở ở cấp 5, mỗi 5 phút và chỉ được 70% giá':'Tự bán mỗi '+Math.round(sellInt)+'s · 70% giá'}</div>
+    <div class="row">${G.hull<=0?'<b style="color:#e76f51">Thuyền hỏng: tự câu và tự bán đã dừng, hãy sửa</b>':BOATS[lv].fx}</div>`;
+  const upgrade=maxed?`<div class="row">Đã đạt cấp thuyền tối đa</div>`:`<button class="tile wide" data-up="boat" ${G.coins<cost?'disabled':''} title="${next.n}: ${next.fx}"><img class="ico" src="${iconURL('boatT'+(lv+1))}" alt=""><div class="pct">${next.n}</div><div class="cost"><img class="ico" src="${iconURL('coin')}" alt="">${fmt(cost)}</div><div class="pct">${next.fx}</div></button>`;
+  const list=BOATS.map((b,i)=>{
+    const own=i<=lv;
+    return `<div class="tile${i===lv?' on':''}" title="${b.n}: ${b.fx}"><img class="ico${own?'':' dim'}" src="${iconURL('boatT'+i)}" alt=""><div class="pct">${i===lv?'Đang dùng':own?'Đã có':'Khóa'}</div></div>`;
+  }).join('');
+  return head+upgrade+list;
+}
+/** Tab skin: mua nhân vật rồi đổi để dùng nội tại và chiêu cuối */
+function skinHTML(){
+  const cur=SKINS[G.skin]||SKINS[0];
+  const head=`<div class="row"><span>${cur.n}</span><span class="cost">Đã có ${G.skins.length}/${SKINS.length} skin</span></div>
+    <div class="row"><span>Nội tại:</span><span>${cur.pt}</span></div>
+    <div class="row"><span>Chiêu:</span><span>${cur.ult.n} (${cur.ult.cd}s) — ${cur.ult.desc}</span></div>`;
+  const tiles=SKINS.map((s,i)=>{
+    const own=G.skins.includes(i),sel=i===G.skin;
+    return `<button class="tile${sel?' on':''}" data-skin="${i}" title="${s.n} — ${s.pt} — ${s.ult.n}: ${s.ult.desc}" ${!own&&G.coins<s.cost?'disabled':''}><img class="ico${own?'':' dim'}" src="${iconURL('sk'+i)}" alt=""><div class="pct">${own?(sel?'Đang dùng':'Đổi'):''}</div>${own?'':`<div class="cost"><img class="ico" src="${iconURL('coin')}" alt="">${fmt(s.cost)}</div>`}</button>`;
+  }).join('');
+  return head+tiles;
 }
 function petHTML(){
   return PETS.map((p,i)=>{
@@ -1358,11 +1746,11 @@ function aqHTML(){
 function collHTML(){
   const fishCells=FISH.map((f,i)=>{
     const seen=G.disc[i]===1;
-    return `<div class="cell" style="box-shadow:inset 0 0 0 2px ${seen?P[RAR_KEYS[f.r]]:P.deep}"><img class="ico" src="${iconURL(seen?'fish'+i:'sil'+i)}" alt="">${seen?`<span class="stars">${'★'.repeat(f.r+1)}</span>`:''}</div>`;
+    return `<div class="cell" title="${f.n||''}" style="box-shadow:inset 0 0 0 2px ${seen?P[RAR_KEYS[f.r]]:P.deep}"><img class="ico" src="${iconURL(seen?'fish'+i:'sil'+i)}" alt="">${seen?`<span class="stars">${'★'.repeat(f.r+1)}</span>`:''}</div>`;
   });
   const bossCells=BOSSES.map(b=>{
     const n=G.bosses[b.k]||0;
-    return `<div class="cell" style="box-shadow:inset 0 0 0 2px ${n?P.gold:P.deep}"><img class="ico" src="${n?iconURL('bs:'+b.k):iconURL('silb:'+b.k)}" alt="">${n?`<span class="stars">${n}</span>`:''}</div>`;
+    return `<div class="cell" title="${b.n||''}" style="box-shadow:inset 0 0 0 2px ${n?P.gold:P.deep}"><img class="ico" src="${n?iconURL('bs:'+b.k):iconURL('silb:'+b.k)}" alt="">${n?`<span class="stars">${n}</span>`:''}</div>`;
   });
   return fishCells.concat(bossCells).join('');
 }
@@ -1374,30 +1762,49 @@ function boostLabel(now){
 function renderUI(){
   const now=Date.now();
   $('coins').textContent=fmt(G.coins);
-  $('bagN').textContent=`${G.inv.length}/${Eco.cap(G.lv.bag)}`;
+  $('bagN').textContent=`${G.inv.length}/${Eco.cap(G.lv.bag,G.lv.boat)}`;
   $('wx').setAttribute('src',iconURL(WEATHER[weatherIdx].ic));
   $('ev').setAttribute('src',iconURL(EVENTS[eventIdx()].ic));
   $('combo').textContent='×'+Eco.comboMult(combo).toFixed(1);
-  $('comboChip').style.visibility=combo>0?'visible':'hidden';
+  $('comboChip').style.display=combo>0?'flex':'none';
   const boost=$('boost');
   boost.innerHTML=boostLabel(now);
   boost.toggleAttribute('disabled',now<boostReadyAt);
-  const hasBoat=G.lv.boat>0,au=$('auto');
+  const hasBoat=boatAlive(),au=$('auto');
   au.innerHTML=`<img class="ico" src="${iconURL('boat')}" alt="">`;
   au.classList.toggle('on',G.auto&&hasBoat);
   au.toggleAttribute('disabled',!hasBoat);
   const sum=G.inv.reduce((a,it)=>a+it.v,0);
   const sell=$('sell');
-  sell.innerHTML=`<img class="ico" src="${iconURL('bagT0')}" alt=""><span>${G.inv.length}</span><img class="ico" src="${iconURL('coin')}" alt=""><span>${fmt(sum)}</span>`;
+  const sk=SKINS[G.skin]||SKINS[0],pf=sk.pass||{};
+  const gain=Math.round(sum*(1+0.5*G.pres)*Eco.boatSell(G.lv.boat)*(pf.sell||1)*(Date.now()<wealthUntil?1.5:1));
+  sell.innerHTML=`<img class="ico" src="${iconURL('bagT0')}" alt=""><span>${G.inv.length}</span><img class="ico" src="${iconURL('coin')}" alt=""><span>${fmt(gain)}</span>`;
   sell.toggleAttribute('disabled',!G.inv.length);
-  for(const k of ['up','zone','pet','boss','coll'])$('tab_'+k).classList.toggle('on',tab===k);
+  for(const k of ['up','boat','zone','skin','pet','boss','coll'])$('tab_'+k).classList.toggle('on',tab===k);
   $('tabPetIco').setAttribute('src',iconURL('pa'+G.sel+'_'+TIER.pet(petLvSel())));
+  $('tabBoatIco').setAttribute('src',iconURL('boatT'+G.lv.boat));
+  $('tabSkinIco').setAttribute('src',iconURL('sk'+G.skin));
   $('aqHudIco').setAttribute('src',iconURL('aq'));
   $('aqPool').textContent=fmt(Math.floor(G.aq.pool));
   $('tabBossIco').setAttribute('src',iconURL('bs:'+(BOSSES.find(b=>b.z.includes(G.zone))||BOSSES[0]).k));
   $('sheet').classList.toggle('open',sheetOpen);
+  document.body.classList.toggle('sheetOpen',sheetOpen);
+  /* Thanh tiến độ của khu vực đang câu */
+  $('zoneName').textContent=ZONES[G.zone].n;
+  $('zoneFill').style.width=(zonePct(G.zone)*100).toFixed(0)+'%';
+  $('zonePct').textContent=`${Math.min(G.zc[G.zone]||0,BOSS_EVERY)}/${BOSS_EVERY}`;
+  /* Chip hiệu ứng bất lợi của thời tiết */
+  const deb=debuff&&now<calmUntil?null:debuff;
+  $('debChip').hidden=!deb;
+  if(deb){$('debIco').setAttribute('src',iconURL('deb:'+deb.k));$('debTxt').textContent=`${DEBUFFS[deb.k].s} ${Math.ceil(deb.t)}s`;$('debChip').title=`${DEBUFFS[deb.k].n}: ${DEBUFFS[deb.k].t}`}
+  /* Nút chiêu cuối + vòng hồi chiêu */
+  const ult=(SKINS[G.skin]||SKINS[0]).ult,left=Math.max(0,ultReadyAt-now);
+  $('ultIco').setAttribute('src',iconURL('ult:'+ult.type));
+  $('ultBtn').toggleAttribute('disabled',left>0);
+  $('ultTxt').textContent=left>0?Math.ceil(left/1000)+'s':'Chiêu';
+  $('ultRing').style.setProperty('--p',String(left>0?1-left/(ult.cd*1000):1));
   const panel=$('panel');
-  panel.innerHTML=tab==='up'?upHTML():tab==='zone'?zoneHTML():tab==='pet'?petHTML():tab==='boss'?bossHTML():collHTML();
+  panel.innerHTML=tab==='up'?upHTML():tab==='boat'?boatHTML():tab==='zone'?zoneHTML():tab==='skin'?skinHTML():tab==='pet'?petHTML():tab==='boss'?bossHTML():collHTML();
   $('aqModal').hidden=!aqOpen;
   if(aqOpen)$('aqInfo').innerHTML=aqHTML();
 }
@@ -1437,13 +1844,19 @@ function restore(d){
   s.unl=ZONES.map((_,i)=>d.unl[i]?1:0);s.unl[0]=1;
   s.disc=d.disc&&typeof d.disc==='object'?d.disc:{};
   s.cnt=typeof d.cnt==='number'?d.cnt:0;
-  s.inv=d.inv.filter(it=>it&&typeof it.id==='number'&&typeof it.v==='number').slice(0,Eco.cap(s.lv.bag));
+  s.inv=d.inv.filter(it=>it&&typeof it.id==='number'&&typeof it.v==='number').slice(0,Eco.cap(s.lv.bag,s.lv.boat));
   if(d.aq&&typeof d.aq==='object'){
     s.aq.lv=clamp(typeof d.aq.lv==='number'?d.aq.lv:0,0,AQ_MAX_LV);
     s.aq.pool=Math.max(0,typeof d.aq.pool==='number'?d.aq.pool:0);
     s.aq.fish=Array.isArray(d.aq.fish)?d.aq.fish.filter(id=>typeof id==='number'&&FISH[id]).slice(0,Eco.aqCap(s.aq.lv)):[];
   }
   s.pres=typeof d.pres==='number'?d.pres:0;
+  s.skin=clamp(typeof d.skin==='number'?d.skin:0,0,SKINS.length-1);
+  s.skins=Array.isArray(d.skins)?[...new Set(d.skins.filter(i=>Number.isInteger(i)&&i>=0&&i<SKINS.length))]:[0];
+  if(!s.skins.includes(0))s.skins.unshift(0);
+  if(!s.skins.includes(s.skin))s.skin=s.skins[0];
+  const hullMax=Eco.hullMax(s.lv.boat);
+  s.hull=clamp(typeof d.hull==='number'?d.hull:hullMax,0,hullMax);
   s.t=typeof d.t==='number'?d.t:Date.now();
   return s;
 }
@@ -1454,11 +1867,14 @@ window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();ta
 /** Bảng nâng cấp kéo lên/xuống: nút tay cầm đổi trạng thái */
 $('handle').addEventListener('click',()=>{sheetOpen=!sheetOpen;touch()});
 document.addEventListener('click',e=>{
-  const el=/** @type {HTMLElement|null} */(/** @type {HTMLElement} */(e.target).closest('[data-up],[data-zone],[data-pet],[data-sell],[data-boost],[data-auto],[data-tab],[data-aqput],[data-aqcol],[data-aqup],[data-aqrem],[data-summon],[data-aqopen],[data-aqclose],[data-prestige]'));
+  const el=/** @type {HTMLElement|null} */(/** @type {HTMLElement} */(e.target).closest('[data-up],[data-zone],[data-pet],[data-sell],[data-boost],[data-auto],[data-tab],[data-aqput],[data-aqcol],[data-aqup],[data-aqrem],[data-summon],[data-aqopen],[data-aqclose],[data-prestige],[data-skin],[data-repair],[data-ult]'));
   if(!el||el.hasAttribute('disabled'))return;
   if(el.dataset.aqopen!==undefined)aqOpen=true;
   else if(el.dataset.aqclose!==undefined)aqOpen=false;
   else if(el.dataset.prestige!==undefined)prestige();
+  else if(el.dataset.ult!==undefined)useUlt();
+  else if(el.dataset.repair!==undefined)repairBoat();
+  else if(el.dataset.skin!==undefined){const i=+el.dataset.skin;if(G.skins.includes(i))pickSkin(i);else buySkin(i)}
   else if(el.dataset.up)buyUp(/** @type {UpKey} */(el.dataset.up));
   else if(el.dataset.zone!==undefined)tapZone(+el.dataset.zone);
   else if(el.dataset.pet!==undefined)petTap(+el.dataset.pet);
@@ -1473,6 +1889,7 @@ document.addEventListener('click',e=>{
   else sellAll();
   touch();
 });
+window.addEventListener('keydown',e=>{if(e.code==='KeyQ'){e.preventDefault();useUlt()}});
 
 /* ================= 14. INIT & LOOP ================= */
 const saved=readSave();
@@ -1482,14 +1899,9 @@ if(saved){
   const catches=Math.floor(elapsed*(Eco.rate(G.lv.rod,G.lv.boat,0,1)+petRate()));
   if(catches>0){
     const ids=ZONES[G.zone].fish;
-    if(G.lv.boat>=3){
-      const gain=Math.floor(catches*Eco.expValue(ids,G.lv.bait,1)*0.6);
-      if(gain>0){G.coins+=gain;float('coin','+'+fmt(gain),W/2,H/2)}
-    }else{
-      const n=Math.min(catches,Math.max(0,Eco.cap(G.lv.bag)-G.inv.length));
-      for(let i=0;i<n;i++){const id=Eco.pick(ids,G.lv.bait,1);G.disc[id]=1;G.inv.push({id,v:FISH[id].v})}
-      if(n>0)float('bagT0',String(n),W/2,H/2);
-    }
+    const n=Math.min(catches,Math.max(0,Eco.cap(G.lv.bag,G.lv.boat)-G.inv.length));
+    for(let i=0;i<n;i++){const id=Eco.pick(ids,G.lv.bait,1);G.disc[id]=1;G.inv.push({id,v:FISH[id].v})}
+    if(n>0)float('bagT0',String(n),W/2,H/2);
   }
   /* hồ cá: tích xu trong lúc vắng, tối đa 2 giờ */
   if(G.aq.fish.length){
@@ -1500,10 +1912,14 @@ if(saved){
 regen();
 initDecor();
 fit();
+applyWeatherDebuff();
 $('coinIco').setAttribute('src',iconURL('coin'));
 $('bagIco').setAttribute('src',iconURL('bagT0'));
 $('starIco').setAttribute('src',iconURL('star'));
 $('tabUpIco').setAttribute('src',iconURL('rodT'+TIER.rod(G.lv.rod)));
+$('tabBoatIco').setAttribute('src',iconURL('boatT'+G.lv.boat));
+$('tabSkinIco').setAttribute('src',iconURL('sk'+G.skin));
+$('ultIco').setAttribute('src',iconURL('ult:'+(SKINS[G.skin]||SKINS[0]).ult.type));
 $('tabZoneIco').setAttribute('src',iconURL('lily'));
 $('tabCollIco').setAttribute('src',iconURL('fish8'));
 setInterval(writeSave,3000);
@@ -1517,7 +1933,7 @@ function frame(now){
   last=now;
   try{update(dt*mods().speed);draw();if(aqOpen)drawTank()}catch(err){console.error(err)}
   const ms=Date.now(),sec=Math.floor(ms/1000);
-  if(sec!==lastSec){lastSec=sec;if(ms<boostReadyAt||sheetOpen||aqOpen)touch()}
+  if(sec!==lastSec){lastSec=sec;if(ms<boostReadyAt||sheetOpen||aqOpen||Date.now()<ultReadyAt||debuff)touch()}
   const ei=eventIdx();
   if(ei!==lastEv){lastEv=ei;touch()}
   if(dirty){dirty=false;try{renderUI()}catch(err){console.error(err)}}
